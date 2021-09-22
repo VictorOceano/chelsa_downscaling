@@ -17,26 +17,8 @@
 
 import cdsapi
 
-# set times of the day and levels
-times  = [
-            '00:00','01:00','02:00',
-            '03:00','04:00','05:00',
-            '06:00','07:00','08:00',
-            '09:00','10:00','11:00',
-            '12:00','13:00','14:00',
-            '15:00','16:00','17:00',
-            '18:00','19:00','20:00',
-            '21:00','22:00','23:00'
-        ]
-
-plevels_temp = [
-                '850','950'
-            ]
-
-c = cdsapi.Client()
-
 class get_era:
-"""Interpolation class"""
+    """download era data class"""
     def __init__(self, year, month, day, hour, tmp):
         """ Create a set of baseline clims """
         self.year = year
@@ -44,22 +26,39 @@ class get_era:
         self.day = day
         self.hour = hour
         self.tmp = tmp
+        self.times  = [
+                    '00:00','01:00','02:00',
+                    '03:00','04:00','05:00',
+                    '06:00','07:00','08:00',
+                    '09:00','10:00','11:00',
+                    '12:00','13:00','14:00',
+                    '15:00','16:00','17:00',
+                    '18:00','19:00','20:00',
+                    '21:00','22:00','23:00'
+                ]
+        self.plevels_temp = ['850','950']
+        self.c = cdsapi.Client()
 
     # tmean
-    c.retrieve(
-        'reanalysis-era5-single-levels',
-        {
-            'product_type': 'reanalysis',
-            'variable':'2m_temperature',
-            'year':self.year,
-            'month':self.month,
-            'day':self.day,
-            'time':times[int(self.hour)],
-            'format':'netcdf'
-        },
-        self.tmp + 'tmean.nc')
+    def tas(self):
+        self.c.retrieve(
+            'reanalysis-era5-single-levels',
+            {
+                'product_type': 'reanalysis',
+                'variable':'2m_temperature',
+                'year':self.year,
+                'month':self.month,
+                'day':self.day,
+                'time':self.times[int(self.hour)],
+                'format':'netcdf'
+            },
+            self.tmp + 'tmean.nc')
 
-    c.retrieve(
+        return True
+
+
+    def tcc(self):
+        self.c.retrieve(
         'reanalysis-era5-single-levels',
         {
             'product_type': 'reanalysis',
@@ -68,11 +67,14 @@ class get_era:
             'year':self.year,
             'month':self.month,
             'day':self.day,
-            'time':times[int(self.hour)],
+            'time':self.times[int(self.hour)],
         },
         self.tmp + 'tcc.nc')
 
-    c.retrieve(
+        return True
+
+    def z(self):
+        self.c.retrieve(
         'reanalysis-era5-pressure-levels',
         {
             'product_type':'reanalysis',
@@ -81,13 +83,16 @@ class get_era:
             'year':self.year,
             'month':self.month,
             'day':self.day,
-            'time': times[int(self.hour)],
+            'time': self.times[int(self.hour)],
             'format':'netcdf'
         },
-        self.tmp + 'z_levels_'+times[int(self.hour)]+'.nc')
+        self.tmp + 'z_levels_'+times[int(self.hour)] +'.nc')
+
+        return True
 
     # atmospheric temperature
-    c.retrieve(
+    def t(self):
+        self.c.retrieve(
         'reanalysis-era5-pressure-levels',
         {
             'product_type':'reanalysis',
@@ -98,27 +103,32 @@ class get_era:
             'year':self.year,
             'month':self.month,
             'day':self.day,
-            'time': times[int(self.hour)],
+            'time': self.times[int(self.hour)],
             'format':'netcdf'
         },
-        self.tmp + 't_levels_'+times[int(self.hour)]+'.nc')
+        self.tmp + 't_levels_'+times[int(self.hour)] +'.nc')
+
+        return True
 
     # albedo
-    c.retrieve(
+    def albedo(self):
+        self.c.retrieve(
         'reanalysis-era5-land',
         {
             'format': 'netcdf',
             'variable': 'forecast_albedo',
             'day': self.day,
-            'time': times[int(self.hour)],
+            'time': self.times[int(self.hour)],
             'month': self.month,
             'year': self.year,
         },
-        self.tmp + 'albedo_'+times[int(self.hour)]+'.nc')
+        self.tmp + 'albedo_'+ self.times[int(self.hour)] +'.nc')
 
+        return True
 
     # skin temperature
-    c.retrieve(
+    def lst(self):
+        self.c.retrieve(
         'reanalysis-era5-land',
         {
             'format': 'netcdf',
@@ -128,6 +138,7 @@ class get_era:
             'month': self.month,
             'year': self.year,
         },
-        self.tmp + 'skintemp_'+times[int(self.hour)]+'.nc')
+        self.tmp + 'skintemp_' + self.times[int(self.hour)] +'.nc')
 
+        return True
 
