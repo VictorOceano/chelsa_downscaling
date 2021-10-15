@@ -16,8 +16,30 @@
 #along with chelsa_cmip6.  If not, see <https://www.gnu.org/licenses/>.
 
 import cdsapi
+from getpass import getpass
+import os as os
+import xarray as xr
 
-class get_era:
+# set the username and password for access to mistral.dkrz.de
+mistral_password = getpass('Mistral Password')
+mistral_username = getpass('Mistral Username') #'b381089'
+
+def get_era_via_mistral(parameter, type, year, month,  outdir, path='/pool/data/ERA5', day=False, mistral_username, mistral_password):
+    if day==False:
+        filename = path + '/' + type + '/' + year + '/E5' + type + '_' + year + '-' + month + '_' + parameter
+    else:
+        filename = path + '/' + type + '/' + year + '/E5' + type + '_' + year + '-' + month + '-' + day + '_' + parameter
+    os.system('sshpass -p ' + mistral_password + ' scp -o StrictHostKeyChecking=no -r ' + mistral_username + '@mistral.dkrz.de:/' + filename + ' ' + outdir + 'tmp_' + parameter + '.grib')
+    print ('file downloaded. Starting transformation ...')
+    os.system('cdo -R remapcon,r1440x720 -setgridtype,regular ' + outdir + 'tmp_' + parameter + '.grib ' + outdir + 'tmp_' + parameter + '.nc')
+    x1 = xr.open_dataset(outdir + 'tmp_' + parameter + '.nc', engine='cfgrib')
+    x1.to_netcdf(outdir + parameter + '.nc')
+    os.remove(outdir + 'tmp_' + parameter + '.nc')
+    print ('done')
+    return True
+
+
+class get_era_via_api:
     """download era data class"""
     def __init__(self, year, month, day, hour, tmp):
         """ Create a set of baseline clims """
@@ -26,7 +48,7 @@ class get_era:
         self.day = day
         self.hour = hour
         self.tmp = tmp
-        self.times  = [
+        self.times = [
                     '00:00','01:00','02:00',
                     '03:00','04:00','05:00',
                     '06:00','07:00','08:00',
@@ -36,7 +58,7 @@ class get_era:
                     '18:00','19:00','20:00',
                     '21:00','22:00','23:00'
                 ]
-        self.plevels_temp = ['850','950']
+        self.plevels_temp = ['850', '950']
         self.c = cdsapi.Client()
 
     # tmean
@@ -55,7 +77,6 @@ class get_era:
             self.tmp + 'tmean.nc')
 
         return True
-
 
     def tcc(self):
         self.c.retrieve(
@@ -79,18 +100,17 @@ class get_era:
         {
             'product_type':'reanalysis',
             'variable': 'geopotential',
-            'pressure_level':plevels_temp,
+            'pressure_level':self.plevels_temp,
             'year':self.year,
             'month':self.month,
             'day':self.day,
             'time': self.times[int(self.hour)],
             'format':'netcdf'
         },
-        self.tmp + 'z_levels_'+times[int(self.hour)] +'.nc')
+        self.tmp + 'z_levels_'+ self.times[int(self.hour)] +'.nc')
 
         return True
 
-    # atmospheric temperature
     def t(self):
         self.c.retrieve(
         'reanalysis-era5-pressure-levels',
@@ -99,18 +119,17 @@ class get_era:
             'variable':
             'temperature'
             ,
-            'pressure_level':plevels_temp,
+            'pressure_level':self.plevels_temp,
             'year':self.year,
             'month':self.month,
             'day':self.day,
             'time': self.times[int(self.hour)],
             'format':'netcdf'
         },
-        self.tmp + 't_levels_'+times[int(self.hour)] +'.nc')
+        self.tmp + 't_levels_' + self.times[int(self.hour)] + '.nc')
 
         return True
 
-    # albedo
     def albedo(self):
         self.c.retrieve(
         'reanalysis-era5-land',
@@ -122,11 +141,10 @@ class get_era:
             'month': self.month,
             'year': self.year,
         },
-        self.tmp + 'albedo_'+ self.times[int(self.hour)] +'.nc')
+        self.tmp + 'albedo_' + self.times[int(self.hour)] + '.nc')
 
         return True
 
-    # skin temperature
     def lst(self):
         self.c.retrieve(
         'reanalysis-era5-land',

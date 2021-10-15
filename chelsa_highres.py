@@ -1,15 +1,47 @@
+#!/usr/bin/env python
+
+#This file is part of chelsa_highres.
+#
+#chelsa_highre is free software: you can redistribute it and/or modify
+#it under the terms of the GNU General Public License as published by
+#the Free Software Foundation, either version 3 of the License, or
+#(at your option) any later version.
+
+#chelsa_isimip3b_ba_1km is distributed in the hope that it will be useful,
+#but WITHOUT ANY WARRANTY; without even the implied warranty of
+#MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#GNU General Public License for more details.
+
+#You should have received a copy of the GNU General Public License
+#along with chelsa_cmip6.  If not, see <https://www.gnu.org/licenses/>.
+
+from functions.saga_functions import *
+from functions.get_era import *
+
+year = 1980
+month = 12
+day = 30
+hour = 11
+tmp = '/home/karger/scratch/'
+
+era_data = get_era(year=year,
+                   month=month,
+                   day=day,
+                   hour=hour,
+                   tmp=tmp)
+
+era_data.tas()
+era_data.t()
+era_data.z()
+era_data.albedo()
+era_data.lst()
+era_data.tcc()
+
 if __name__ == '__main__':
     saga_api.SG_Get_Data_Manager().Delete_All()  #
 
     Load_Tool_Libraries(True)
 
-    # create file for logging of memory usage
-    f = open(TEMP + 'log.txt', 'w+')
-    tmem = datetime.datetime.now().strftime("%m/%d/%Y, %H:%M:%S") + ' RUN STARTED ' + "%0d" % (process.memory_info()[0] / 1000000000) + ' ' + 'calculate temprature lapserates and temperature extremes' + '\n'
-    with open(TEMP + 'memlog.txt','a') as memlog:
-         memlog.write(tmem)
-
-    print(datetime.datetime.now())
 
     ### calculate temprature lapserates *******************************************************
 
@@ -75,15 +107,31 @@ if __name__ == '__main__':
     # convert kWh/m**-2 to W/m**-2
     rsds_cl = grid_calculator(rsds_cl,rsds_cl,'a*0.1142')
     # read the albedo
+
     albedo = import_ncdf(TEMP + 'albedo_' + times[int(hour)] + '.nc')
+
     albedo = change_latlong(albedo.Get_Grid(0))
+
     albedo.Get_Projection().Create(saga_api.CSG_String('+proj=longlat +datum=WGS84 +no_defs'), saga_api.SG_PROJ_FMT_Proj4)
+
     albedo_pj = clip_grid(albedo, dem_latlong, 3)
+
     albedo_shp = gridvalues_to_points(albedo_pj)
-    albedo_shp = reproject_shape(albedo_shp, dem)
-    albedo_ras = multilevel_B_spline(albedo_shp,dem)
-    tas_sky = grid_calculator(tas_high,tas_high,'a-20')
-    lst = calc_LST(rsds_cl,tas_high,tas_sky,albedo_ras)
+
+    albedo_shp = reproject_shape(albedo_shp,
+                                 dem)
+
+    albedo_ras = multilevel_B_spline(albedo_shp,
+                                     dem)
+
+    tas_sky = grid_calculator(tas_high,
+                              tas_high,
+                              'a-20')
+
+    lst = calc_LST(rsds_cl,
+                   tas_high,
+                   tas_sky,
+                   albedo_ras)
 
     # save the outputs
     outfile2 = OUTPUT + 'tas/CHELSA_tas_' + times[int(hour)] + '_' + day + '_' + month + '_' + year + '.V.1.0.tif'
