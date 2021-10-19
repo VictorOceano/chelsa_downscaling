@@ -61,74 +61,6 @@ class get_era_via_api:
         self.plevels_temp = ['850', '950']
         self.c = cdsapi.Client()
 
-    # tmean
-    def tas(self):
-        self.c.retrieve(
-            'reanalysis-era5-single-levels',
-            {
-                'product_type': 'reanalysis',
-                'variable':'2m_temperature',
-                'year':self.year,
-                'month':self.month,
-                'day':self.day,
-                'time':self.times[int(self.hour)],
-                'format':'netcdf'
-            },
-            self.tmp + 'tmean.nc')
-
-        return True
-
-    def tcc(self):
-        self.c.retrieve(
-        'reanalysis-era5-single-levels',
-        {
-            'product_type': 'reanalysis',
-            'format': 'netcdf',
-            'variable': 'total_cloud_cover',
-            'year':self.year,
-            'month':self.month,
-            'day':self.day,
-            'time':self.times[int(self.hour)],
-        },
-        self.tmp + 'tcc.nc')
-
-        return True
-
-    def z(self):
-        self.c.retrieve(
-        'reanalysis-era5-pressure-levels',
-        {
-            'product_type':'reanalysis',
-            'variable': 'geopotential',
-            'pressure_level':self.plevels_temp,
-            'year':self.year,
-            'month':self.month,
-            'day':self.day,
-            'time': self.times[int(self.hour)],
-            'format':'netcdf'
-        },
-        self.tmp + 'z_levels_'+ self.times[int(self.hour)] +'.nc')
-
-        return True
-
-    def t(self):
-        self.c.retrieve(
-        'reanalysis-era5-pressure-levels',
-        {
-            'product_type':'reanalysis',
-            'variable':
-            'temperature'
-            ,
-            'pressure_level':self.plevels_temp,
-            'year':self.year,
-            'month':self.month,
-            'day':self.day,
-            'time': self.times[int(self.hour)],
-            'format':'netcdf'
-        },
-        self.tmp + 't_levels_' + self.times[int(self.hour)] + '.nc')
-
-        return True
 
     def albedo(self):
         self.c.retrieve(
@@ -144,6 +76,39 @@ class get_era_via_api:
         self.tmp + 'albedo_' + self.times[int(self.hour)] + '.nc')
 
         return True
+
+
+    def tal1(self):
+        self.c.retrieve(
+        'reanalysis-era5-land',
+        {
+            'format': 'netcdf',
+            'variable': 'soil_temperature_level1',
+            'day': self.day,
+            'time': times[int(self.hour)],
+            'month': self.month,
+            'year': self.year,
+        },
+        self.tmp + 'skintemp_' + self.times[int(self.hour)] +'.nc')
+
+        return True
+
+    
+    def tal2(self):
+        self.c.retrieve(
+        'reanalysis-era5-land',
+        {
+            'format': 'netcdf',
+            'variable': 'soil_temperature_level1',
+            'day': self.day,
+            'time': times[int(self.hour)],
+            'month': self.month,
+            'year': self.year,
+        },
+        self.tmp + 'skintemp_' + self.times[int(self.hour)] +'.nc')
+
+        return True
+
 
     def lst(self):
         self.c.retrieve(
