@@ -18,24 +18,23 @@
 from functions.saga_functions import *
 from functions.get_era import *
 
-year = 1980
+year = 1982
 month = 12
 day = 30
 hour = 11
 tmp = '/home/karger/scratch/'
 
-era_data = get_era(year=year,
-                   month=month,
-                   day=day,
-                   hour=hour,
-                   tmp=tmp)
+era_data = get_era_via_api(year=year,
+                           month=month,
+                           day=day,
+                           hour=hour,
+                           tmp=tmp)
 
-era_data.tas()
-era_data.t()
-era_data.z()
+
 era_data.albedo()
 era_data.lst()
-era_data.tcc()
+era_data.tal1()
+era_data.tal2()
 
 if __name__ == '__main__':
     saga_api.SG_Get_Data_Manager().Delete_All()  #

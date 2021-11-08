@@ -24,7 +24,7 @@ import xarray as xr
 mistral_password = getpass('Mistral Password')
 mistral_username = getpass('Mistral Username') #'b381089'
 
-def get_era_via_mistral(parameter, type, year, month,  outdir, path='/pool/data/ERA5', day=False, mistral_username, mistral_password):
+def get_era_via_mistral(parameter, type, year, month,  outdir, path='/pool/data/ERA5', mistral_username=None, mistral_password=None, day=False, ):
     if day==False:
         filename = path + '/' + type + '/' + year + '/E5' + type + '_' + year + '-' + month + '_' + parameter
     else:
@@ -36,6 +36,7 @@ def get_era_via_mistral(parameter, type, year, month,  outdir, path='/pool/data/
     x1.to_netcdf(outdir + parameter + '.nc')
     os.remove(outdir + 'tmp_' + parameter + '.nc')
     print ('done')
+
     return True
 
 
