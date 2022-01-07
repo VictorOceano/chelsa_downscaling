@@ -102,7 +102,7 @@ class get_era_via_api:
             'format': 'netcdf',
             'variable': 'soil_temperature_level1',
             'day': self.day,
-            'time': times[int(self.hour)],
+            'time': self.times[int(self.hour)],
             'month': self.month,
             'year': self.year,
         },
@@ -118,11 +118,12 @@ class get_era_via_api:
             'format': 'netcdf',
             'variable': 'skin_temperature',
             'day': self.day,
-            'time': times[int(self.hour)],
+            'time': self.times[int(self.hour)],
             'month': self.month,
             'year': self.year,
         },
         self.tmp + 'skintemp_' + self.times[int(self.hour)] +'.nc')
 
         return True
+
 
