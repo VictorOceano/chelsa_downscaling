@@ -30,8 +30,8 @@ class Coarse_data:
         self.tas_ = None
         self.tasmax = None
         self.tasmin = None
-        self.ua100000 = None
-        self.va100000 = None
+        self.u = None
+        self.v = None
         self.hurs = None
         self.pr_ = None
         self.ps = None
@@ -134,7 +134,7 @@ class Dem_data:
 class Aux_data:
     """ Auxillary grid data """
 
-    def __init__(self, INPUT, W5E5):
+    def __init__(self, INPUT):
         self.patch = None  # load_sagadata(INPUT + 'patch.sgrd')
         self.expocor = None  # load_sagadata(INPUT + 'expocor.sgrd')
         self.dummy_W5E5 = None  # load_sagadata(INPUT + 'dummy_W5E5.sgrd')
@@ -144,17 +144,13 @@ class Aux_data:
         self.continents = None  # load_sagadata(W5E5 + 'continents.sgrd')
         self.landseamask = None  # load_sagadata(W5E5 + 'landseamask.sgrd')
         self.INPUT = INPUT
-        self.W5E5 = W5E5
 
     def set(self, var):
         if getattr(self, var) == None:
             return self._build_(var)
 
     def _build_(self, var):
-        if var == 'patch' or var == 'expocor' or var == 'dummy_W5E5':
-            ds = load_sagadata(self.INPUT + var + '.sgrd')
-        else:
-            ds = load_sagadata(self.W5E5 + var + '.sgrd')
+        ds = load_sagadata(self.INPUT + var + '.sgrd')
         setattr(self, var, ds)
 
     def delete(self, var):

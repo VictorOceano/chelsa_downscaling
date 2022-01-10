@@ -38,7 +38,7 @@ from functions.ingester import *
 from functions.saga_functions import *
 from functions.chelsa_functions import *
 from functions.chelsa_data_classes import *
-from functions.chelsa import chelsa
+
 from helper.save2ncdf import save2ncdf
 
 # *************************************************
@@ -63,20 +63,37 @@ get_inputdata(year=YEAR, month=MONTH, day=DAY, TEMP=TEMP, hour=HOUR)
 ### create the data classes
 coarse_data = Coarse_data(TEMP=TEMP)
 dem_data = Dem_data(INPUT=INPUT)
-
+aux_data = Aux_data(INPUT=INPUT)
 coarse_data.set('tlapse_mean')
 
 coarse_data.tlapse_mean.Save(TEMP + 'tlapse.sgrd')
 
-tas = temperature(Coarse=coarse_data, Dem=dem_data, var='tas')
+tas = temperature(Coarse=coarse_data,
+                  Dem=dem_data,
+                  var='tas')
 
 tas.Save(TEMP + 'tas_high.sgrd')
 
-ps_high = surface_pressure(Coarse=coarse_data, Dem=dem_data)
+ps_high = surface_pressure(Coarse=coarse_data,
+                           Dem=dem_data)
 
 ps_high.Save(TEMP + 'ps_high.sgrd')
 
-rsds = solar_radiation(Coarse=coarse_data, Dem=dem_data, year=YEAR, month=MONTH, day=DAY, hour=HOUR)
+windef = calculate_windeffect(Coarse=coarse_data, Dem=dem_data)
+
+wind_cor, wind_coarse = correct_windeffect(windef1=windef,
+                                           Coarse=coarse_data,
+                                           Aux=aux_data,
+                                           Dem=dem_data)
+
+wind_cor.Save(TEMP + 'wind_cor.sgrd')
+
+rsds = solar_radiation(Coarse=coarse_data,
+                       Dem=dem_data,
+                       year=YEAR,
+                       month=MONTH,
+                       day=DAY,
+                       hour=HOUR)
 
 rsds.Save(TEMP + 'rsds.sgrd')
 

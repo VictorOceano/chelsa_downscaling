@@ -49,7 +49,7 @@ def get_inputdata(year, month, day, TEMP, hour=None):
         x1 = x1.sel(time=str(year) + '-' + str("%02d" % month) + '-' + str("%02d" % day))
         x1 = x1.mean(dim='time')
 
-    x1.to_netcdf(TEMP + 'u' + str(year) + str("%02d" % month) + str("%02d" % day) + str("%02d" % hour) +'.nc')
+    x1.to_netcdf(TEMP + 'u.nc')
 
     # get vwind
     get_era5(parameter='166',
@@ -66,7 +66,7 @@ def get_inputdata(year, month, day, TEMP, hour=None):
         x1 = x1.sel(time=str(year) + '-' + str("%02d" % month) + '-' + str("%02d" % day))
         x1 = x1.mean(dim='time')
 
-    x1.to_netcdf(TEMP + 'v' + str(year) + str("%02d" % month) + str("%02d" % day) + str("%02d" % hour) +'.nc')
+    x1.to_netcdf(TEMP + 'v.nc')
 
 
     # get tz
@@ -109,6 +109,13 @@ def get_inputdata(year, month, day, TEMP, hour=None):
         x1 = x1.mean(dim='time')
     x1.to_netcdf(TEMP + 'z.nc')
 
+    x1 = xr.open_dataset(TEMP + '129' + '_' + str(year) + '-' + str("%02d" % month) + '-' + str("%02d" % day) + '.nc')
+    if hour:
+        x1 = x1.sel(time=str(year) + '-' + str("%02d" % month) + '-' + str("%02d" % day) + 'T' + str("%02d" % hour) + str(':00:00'))
+    else:
+        x1 = x1.sel(time=str(year) + '-' + str("%02d" % month) + '-' + str("%02d" % day))
+        x1 = x1.mean(dim='time')
+    x1.to_netcdf(TEMP + 'zg.nc')
 
     # get tas
     get_era5(parameter='167',
@@ -168,6 +175,40 @@ def get_inputdata(year, month, day, TEMP, hour=None):
         x1 = x1.mean(dim='time')
 
     x1.to_netcdf(TEMP + 'tcc.nc')
+
+
+    # get hurs
+    get_era5(parameter='157',
+             type='pl00_1H',
+             year=str(year),
+             month=str("%02d" % month),
+             day=str("%02d" % day),
+             outdir=TEMP,
+             path='/pool/data/ERA5')
+    x1 = xr.open_dataset(TEMP + '157' + '_' + str(year) + '-' + str("%02d" % month) + '-' + str("%02d" % day) + '.nc')
+    x1 = x1.sel(isobaricInhPa=1000)
+    if hour:
+        x1 = x1.sel(
+            time=str(year) + '-' + str("%02d" % month) + '-' + str("%02d" % day) + 'T' + str("%02d" % hour) + str(
+                ':00:00'))
+    else:
+        x1 = x1.sel(time=str(year) + '-' + str("%02d" % month) + '-' + str("%02d" % day))
+        x1 = x1.mean(dim='time')
+    x1.to_netcdf(TEMP + 'hurs.nc')
+
+    x1 = xr.open_dataset(TEMP + '157' + '_' + str(year) + '-' + str("%02d" % month) + '-' + str("%02d" % day) + '.nc')
+    if hour:
+        x1 = x1.sel(
+            time=str(year) + '-' + str("%02d" % month) + '-' + str("%02d" % day) + 'T' + str("%02d" % hour) + str(
+                ':00:00'))
+    else:
+        x1 = x1.sel(time=str(year) + '-' + str("%02d" % month) + '-' + str("%02d" % day))
+        x1 = x1.mean(dim='time')
+    x1.to_netcdf(TEMP + 'rh.nc')
+
+
+
+
 
 
 
