@@ -88,6 +88,11 @@ wind_cor, wind_coarse = correct_windeffect(windef1=windef,
 
 wind_cor.Save(TEMP + 'wind_cor.sgrd')
 
+
+tcc = cloud_cover(Coarse=coarse_data, Dem=dem_data, windeffect=wind_cor)
+
+tcc.Save(TEMP + 'tcc_high.sgrd')
+
 rsds = solar_radiation(Coarse=coarse_data,
                        Dem=dem_data,
                        year=YEAR,

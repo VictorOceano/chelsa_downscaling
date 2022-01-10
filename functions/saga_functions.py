@@ -1568,15 +1568,15 @@ def cloud_overlap(cloudcover,geopotential,cloudbase,dem,windeffect,levels):
     Tool.Get_Parameters().Reset_Grid_System()
 
     for level in levels:
-        Tool.Get_Parameter('COVERS').asList().Add_Item(cloudcover['cc' + level])
+        Tool.Get_Parameter('COVERS').asList().Add_Item(cloudcover.Get_Grid(level))
     for level in levels:
-        Tool.Get_Parameter('HEIGHTS').asList().Add_Item(geopotential['geo' + level])
+        Tool.Get_Parameter('HEIGHTS').asList().Add_Item(geopotential.Get_Grid(level))
 
     Tool.Set_Parameter('GROUND', dem.asGrid())
     Tool.Set_Parameter('WIND', windeffect.asGrid())
     Tool.Set_Parameter('CBASE', cloudbase.asGrid())
     Tool.Set_Parameter('BLOCKS', saga_api.SG_Get_Create_Pointer()) # optional output, remove this line, if you don't want to create it
-    Tool.Set_Parameter('INTERVAL', 2500.000000)
+    Tool.Set_Parameter('INTERVAL', 250.000000)
     Tool.Set_Parameter('MINCOVER', -1.0000)
 
     print('Executing tool: ' + Tool.Get_Name().c_str())

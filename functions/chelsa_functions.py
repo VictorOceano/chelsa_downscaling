@@ -205,39 +205,40 @@ def correct_windeffect(windef1, Coarse, Dem, Aux):
 
 
 
-def cloud_cover():
-    ### calculate cloud cover ******************************************************************************************
-    ## mean of layers
-    geomean = {}
-
-    for level in levels:
-        filename  = TEMP + 'geo_levels_' + level + '.nc'
-        geolevels = import_ncdf(filename)
-        geolevels = get_mean(geolevels)
-        geomean["geo{0}".format(level)] = change_latlong(geolevels)
-
-    ccmean = {}
-    for level in levels:
-        filename = TEMP + 'cc_levels_' + level + '.nc'
-        cclevels = import_ncdf(filename)
-        cclevels = get_mean(cclevels)
-        ccmean["cc{0}".format(level)] = change_latlong(cclevels)
-
-    for level in levels:
-        ccmean['cc' + level ].Save(TEMP + 'cc' + level + '.sgrd')
-
-    for level in levels:
-        geomean['geo' + level ].Save(TEMP + 'geo' + level + '.sgrd')
+def cloud_cover(Coarse, Dem, windeffect):
+    Coarse.set('tas_')
+    Coarse.set('hurs')
+    levels = range(0, 37)
+    levels.reverse()
+    cblev = grid_calculator(Coarse.tas_,
+                            Coarse.hurs,
+                            '(20+((a-273.15)/5))*(100-b)')
 
     ## interpolate cloud base heighh
-    dem_geo = calc_geopotential(dem)
-    cblev_res = resample(cblev_ras,dem)
-    patchgrid = load_sagadata(INPUT + 'patch.sgrd')
-    windef2  = patching(windef1,patchgrid)
+    # dem_geo = calc_geopotential(dem
+    Dem.set('dem_high')
+    dem_geo = calc_geopotential(Dem.dem_high)
+    cblev_res = resample(cblev, Dem.dem_high)
 
-    cctotal = cloud_overlap(ccmean,geomean,cblev_res,dem_geo,windef2,levels)
+    Coarse.set('cc')
+    Coarse.set('zg')
+    cctotal = cloud_overlap(Coarse.cc,
+                            Coarse.zg,
+                            cblev_res,
+                            dem_geo,
+                            windeffect,
+                            levels)
 
     cctotal = change_data_storage(cctotal)
+
+    Coarse.set('tcc')
+    cc_coarse = resample_up(cctotal, Coarse.tcc, 4)
+    bias = grid_calculator(cc_coarse, Coarse.tcc, '(a+0.001)/(b+0.001)')
+    cc_fin = grid_calculatorX(cctotal, bias, 'a/b')
+    Coarse.delete('tcc')
+
+    return cc_fin
+
 
 def solar_radiation(Coarse, Dem, year, month, day, hour):
     # calculate solar radiation

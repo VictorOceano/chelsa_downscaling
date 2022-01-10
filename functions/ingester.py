@@ -206,6 +206,26 @@ def get_inputdata(year, month, day, TEMP, hour=None):
         x1 = x1.mean(dim='time')
     x1.to_netcdf(TEMP + 'rh.nc')
 
+    # get cc
+    get_era5(parameter='248',
+             type='pl00_1H',
+             year=str(year),
+             month=str("%02d" % month),
+             day=str("%02d" % day),
+             outdir=TEMP,
+             path='/pool/data/ERA5')
+
+    x1 = xr.open_dataset(TEMP + '248' + '_' + str(year) + '-' + str("%02d" % month) + '-' + str("%02d" % day) + '.nc')
+    if hour:
+        x1 = x1.sel(
+            time=str(year) + '-' + str("%02d" % month) + '-' + str("%02d" % day) + 'T' + str("%02d" % hour) + str(
+                ':00:00'))
+    else:
+        x1 = x1.sel(time=str(year) + '-' + str("%02d" % month) + '-' + str("%02d" % day))
+        x1 = x1.mean(dim='time')
+    x1.to_netcdf(TEMP + 'cc.nc')
+
+
 
 
 

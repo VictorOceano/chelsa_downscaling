@@ -36,6 +36,9 @@ class Coarse_data:
         self.pr_ = None
         self.ps = None
         self.tcc = None
+        self.rh = None
+        self.zg = None
+        self.cc = None
         self.tlapse_mean = None
         self.rsds = None
         self.TEMP = TEMP
@@ -59,6 +62,10 @@ class Coarse_data:
     def _build_(self, var):
         if var != 'tlapse_mean' and var != 'rsds':
             ds = import_ncdf(self.TEMP + var + '.nc').Get_Grid(0)
+            setattr(self, var, ds)
+
+        if var == 'zg' or var == 'cc' or var == 'rh':
+            ds = import_ncdf(self.TEMP + var + '.nc')
             setattr(self, var, ds)
 
         if var == 'tlapse_mean':
@@ -158,40 +165,7 @@ class Aux_data:
         setattr(self, var, None)
 
 
-class Cc_downscale_data:
-    """ cloud cover class """
 
-    def __init__(self, CC, TEMP, month):
-        self.cc_clim_high = None  # import_gdal(CC + "CHELSA_tcc_" + month + "_1981-2010_V.2.1.tif")
-        self.cc_clim_low = None  # import_ncdf(TEMP + 'clt_clim.nc').Get_Grid(2)
-        self.cc_time = None  # import_ncdf(TEMP + 'clt.nc').Get_Grid(3)
-        self.CC = CC
-        self.TEMP = TEMP
-        self.month = month
-
-    def set(self, var):
-        if getattr(self, var) == None:
-            return self._build_(var)
-
-    def _build_(self, var):
-        if var == 'cc_time':
-            ds = import_ncdf(self.TEMP + 'clt.nc').Get_Grid(0)
-            ds.asGrid().Set_Scaling(0.01, 0)
-            setattr(self, var, ds)
-
-        if var == 'cc_clim_low':
-            ds = import_ncdf(self.TEMP + 'clt_clim.nc').Get_Grid(0)
-            ds.asGrid().Set_Scaling(0.01, 0)
-            setattr(self, var, ds)
-
-        if var == 'cc_clim_high':
-            ds = import_gdal(self.CC + "CHELSA_tcc_" + self.month + "_1981-2010_V.2.1.tif")
-            ds.asGrid().Set_Scaling(0.0001, 0)
-            setattr(self, var, ds)
-
-    def delete(self, var):
-        saga_api.SG_Get_Data_Manager().Delete(getattr(self, var))
-        setattr(self, var, None)
 
 
 class Srad_data:
