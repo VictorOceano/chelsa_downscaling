@@ -39,8 +39,6 @@ from functions.saga_functions import *
 from functions.chelsa_functions import *
 from functions.chelsa_data_classes import *
 
-from helper.save2ncdf import save2ncdf
-
 # *************************************************
 # global parameters
 # *************************************************
@@ -57,7 +55,6 @@ saga_api.SG_Set_History_Depth(0)
 
 
 get_inputdata(year=YEAR, month=MONTH, day=DAY, TEMP=TEMP, hour=HOUR)
-
 
 
 ### create the data classes
@@ -93,12 +90,36 @@ tcc = cloud_cover(Coarse=coarse_data, Dem=dem_data, windeffect=wind_cor)
 
 tcc.Save(TEMP + 'tcc_high.sgrd')
 
-rsds = solar_radiation(Coarse=coarse_data,
-                       Dem=dem_data,
-                       year=YEAR,
-                       month=MONTH,
-                       day=DAY,
-                       hour=HOUR)
+rsds, csr = solar_radiation(tcc,
+                            Dem=dem_data,
+                            year=YEAR,
+                            month=MONTH,
+                            day=DAY,
+                            hour=HOUR)
 
 rsds.Save(TEMP + 'rsds.sgrd')
 
+
+hurs = relative_humidity(Coarse=coarse_data,
+                         Dem=dem_data,
+                         windeffect=wind_cor)
+
+hurs.Save(TEMP + 'hurs_high.sgrd')
+
+lwr = longwave_radiation_downwards(rsds=rsds,
+                                   csr=csr,
+                                   hurs=hurs,
+                                   tas=tas)
+
+lwr.Save(TEMP + 'lwr_high.sgrd')
+
+pr = precipitation(wind_cor=wind_cor,
+                   wind_coarse=wind_coarse,
+                   Coarse=coarse_data)
+
+pr.Save(TEMP + 'pr_high.sgrd')
+
+
+wind_dir, wind_speed = wind_speed_direction(Coarse=coarse_data, Dem=dem_data)
+
+wind_speed.Save(TEMP + 'windspeed_high.sgrd')

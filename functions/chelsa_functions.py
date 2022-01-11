@@ -22,6 +22,8 @@ Load_Tool_Libraries(True)
 
 
 def temperature(Coarse, Dem, var):
+    # this function calculates 2m air temperature based on atmospheric lapse rates
+    # and a high resolution DEM
     # load coarse temperature data
     if var == 'tas':
         Coarse.set('tas_')
@@ -56,6 +58,7 @@ def temperature(Coarse, Dem, var):
 
 
 def surface_pressure(Coarse, Dem):
+    # this function calculates surface pressure using the barometric equation
     Coarse.set('tas_')
     Coarse.set('ps')
     Coarse.set('tlapse_mean')
@@ -203,8 +206,6 @@ def correct_windeffect(windef1, Coarse, Dem, Aux):
     return wind_cor, wind_coarse25 #, wind_coarse
 
 
-
-
 def cloud_cover(Coarse, Dem, windeffect):
     Coarse.set('tas_')
     Coarse.set('hurs')
@@ -214,14 +215,13 @@ def cloud_cover(Coarse, Dem, windeffect):
                             Coarse.hurs,
                             '(20+((a-273.15)/5))*(100-b)')
 
-    ## interpolate cloud base heighh
-    # dem_geo = calc_geopotential(dem
     Dem.set('dem_high')
     dem_geo = calc_geopotential(Dem.dem_high)
     cblev_res = resample(cblev, Dem.dem_high)
 
     Coarse.set('cc')
     Coarse.set('zg')
+
     cctotal = cloud_overlap(Coarse.cc,
                             Coarse.zg,
                             cblev_res,
@@ -240,7 +240,7 @@ def cloud_cover(Coarse, Dem, windeffect):
     return cc_fin
 
 
-def solar_radiation(Coarse, Dem, year, month, day, hour):
+def solar_radiation(cc, Dem, year, month, day, hour):
     # calculate solar radiation
     Dem.set('demproj')
     Dem.set('dem_high')
@@ -253,10 +253,76 @@ def solar_radiation(Coarse, Dem, year, month, day, hour):
 
     csr_latlong = proj_2_latlong(csr, Dem.dem_high)
 
-    Coarse.set('tcc')
+    #Coarse.set('tcc')
     srad_sur = surface_radiation(csr_latlong,
-                                 Coarse.tcc,
+                                 cc,
                                  'Surface Downwelling Shortwave Radiation')
 
-    return srad_sur
+    return srad_sur, csr_latlong
+
+
+def relative_humidity(Coarse, Dem, windeffect):
+    Coarse.set('rh')
+    Coarse.set('zg')
+    levels = range(0, 37)
+    levels.reverse()
+    Dem.set('dem_high')
+    dem_geo = calc_geopotential(Dem.dem_high)
+
+    rh1 = Multi_Level_to_Surface_Interpolation(var=Coarse.rh, zg=Coarse.zg, dem_geo=dem_geo, levels=levels)
+    rh2 = grid_calculator_simple(rh1, 'log((a/100)/(1-(a/100)))')
+
+    Dem.set('dem_low')
+    windnorm = Grid_Normalization(windeffect)
+    windnorm_coarse = resample_up(windnorm, Dem.dem_low, 4)
+
+    rh3 = grid_calculator3(rh2, windnorm, windnorm_coarse, '(a*(b+(c-b)*(1-(c)))/c)')
+    rh4 = grid_calculator_simple(rh3, '1/(1+exp(-1*(a)))')
+
+    return rh4
+
+
+def precipitation(wind_cor, wind_coarse, Coarse):
+    Coarse.set('pr_')
+
+    precip = downscale_precip(wind_cor,
+                              wind_coarse,
+                              Coarse.pr_,
+                              'total surface precipitation', 3)
+
+    return precip
+
+
+def wind_speed_direction(Coarse, Dem):
+    Coarse.set('vz')
+    Coarse.set('uz')
+    Coarse.set('zg')
+    levels = range(0, 37)
+    levels.reverse()
+    Dem.set('dem_high')
+    dem_geo = calc_geopotential(Dem.dem_high)
+
+    u_sfc = Multi_Level_to_Surface_Interpolation(var=Coarse.uz, zg=Coarse.zg, dem_geo=dem_geo, levels=levels)
+    v_sfc = Multi_Level_to_Surface_Interpolation(var=Coarse.vz, zg=Coarse.zg, dem_geo=dem_geo, levels=levels)
+
+    dir, len = Gradient_Vector_from_Cartesian_to_Polar_Coordinates(u_sfc=u_sfc, v_sfc=v_sfc)
+
+    return dir, len
+
+
+def longwave_radiation_downwards(rsds, csr, hurs, tas):
+    tas.Set_Scaling(0.1)
+    # e_sat = grid_calculator_simple(tas, equ='0.6112*exp((17.62*a)/(243.12+a))')
+    vp = grid_calculator(tas, hurs, equ='a*b')
+    # sbc = Stefan Bolzman constant = 0.00000005670374
+    # e_clear = 59.38 + 113.7 * (tas / 273.16)^6 + 96.96 * sqrt((4.65 * vpd) / (25 * tas))/sbc*T^4
+    e_clear = grid_calculator(tas, vp, equ='59.38+113.7*(a/273.16)^6+96.96*sqrt((4.65*b)/(25*a))/(0.00000005670374*a^4)')
+    t_atm = grid_calculator(rsds, csr, equ='a/b')
+    # a =−0.84 and b = 0.84
+    # e_eff = (1 + a * (1 - t_atm)) * e_clear + b * (1 - t_atm)
+    e_eff = grid_calculator(t_atm, e_clear, equ='(1+(-0.84)*(1-a))*b+0.84*(1-a)')
+    # lw = e_eff*sbc*tas^4
+    lw = grid_calculator(e_eff, tas, equ='a*0.00000005670374*(b^4)')
+
+    return lw
 

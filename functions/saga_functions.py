@@ -2460,3 +2460,118 @@ def clear_sky_solar_radiation(dem_merc, year, month, day, hour):
 
     return Data
 
+
+def Multi_Level_to_Surface_Interpolation(var, zg, dem_geo, levels):
+    #_____________________________________
+    Tool = saga_api.SG_Get_Tool_Library_Manager().Get_Tool('climate_tools', '0')
+    if Tool == None:
+        print('Failed to create tool: Multi Level to Surface Interpolation')
+        return False
+
+    Tool.Get_Parameters().Reset_Grid_System()
+
+    for level in levels:
+        Tool.Get_Parameter('VARIABLE').asList().Add_Item(var.Get_Grid(level))
+    for level in levels:
+        Tool.Get_Parameter('X_GRIDS').asList().Add_Item(zg.Get_Grid(level))
+
+    Tool.Set_Parameter('X_SOURCE', 1)
+    Tool.Set_Parameter('H_METHOD', 2)
+    Tool.Set_Parameter('V_METHOD', 1)
+    Tool.Set_Parameter('COEFFICIENTS', False)
+    Tool.Set_Parameter('LINEAR_SORTED', 1)
+    Tool.Set_Parameter('SPLINE_ALL', False)
+    Tool.Set_Parameter('TREND_ORDER', 3)
+    Tool.Set_Parameter('SURFACE', dem_geo)
+
+    if Tool.Execute() == False:
+        print('failed to execute tool: ' + Tool.Get_Name().c_str())
+        return False
+
+    Data = Tool.Get_Parameter('RESULT').asDataObject()
+
+    return Data
+
+
+def Grid_Normalization(grid):
+    #_____________________________________
+    Tool = saga_api.SG_Get_Tool_Library_Manager().Get_Tool('grid_calculus', '0')
+    if Tool == None:
+        print('Failed to create tool: Grid Normalization')
+        return False
+
+    Tool.Get_Parameters().Reset_Grid_System()
+
+    Tool.Set_Parameter('INPUT', grid)
+    Tool.Set_Parameter('RANGE.MIN', 0.000000)
+    Tool.Set_Parameter('RANGE.MAX', 1.000000)
+
+    if Tool.Execute() == False:
+        print('failed to execute tool: ' + Tool.Get_Name().c_str())
+        return False
+
+    Data = Tool.Get_Parameter('OUTPUT').asDataObject()
+
+    return Data
+
+
+
+def grid_calculator3(obj1, obj2, xobj3, equ):
+    #_____________________________________
+    # Create a new instance of tool 'Grid Calculator'
+    Tool = saga_api.SG_Get_Tool_Library_Manager().Create_Tool('grid_calculus', '1')
+    if Tool == None:
+        print('Failed to create tool: Grid Calculator')
+        return False
+
+    Tool.Get_Parameters().Reset_Grid_System()
+
+    Tool.Set_Parameter('RESAMPLING', 'B-Spline Interpolation')
+    Tool.Set_Parameter('FORMULA', equ)
+    Tool.Set_Parameter('NAME', 'Calculation')
+    Tool.Set_Parameter('FNAME', False)
+    Tool.Set_Parameter('USE_NODATA', False)
+    Tool.Set_Parameter('TYPE', 7)
+    Tool.Get_Parameter('GRIDS').asList().Add_Item(obj1.asGrid())
+    Tool.Get_Parameter('GRIDS').asList().Add_Item(obj2.asGrid())
+    Tool.Get_Parameter('XGRIDS').asList().Add_Item(xobj3.asGrid())
+
+    print('Executing tool: ' + Tool.Get_Name().c_str())
+    if Tool.Execute() == False:
+        print('failed')
+        return False
+    print('okay')
+
+    Data = Tool.Get_Parameter('RESULT').asGrid()
+
+    return Data
+
+
+def Gradient_Vector_from_Cartesian_to_Polar_Coordinates(u_sfc, v_sfc):
+    #_____________________________________
+    Tool = saga_api.SG_Get_Tool_Library_Manager().Get_Tool('grid_calculus', '15')
+    if Tool == None:
+        print('Failed to create tool: Gradient Vector from Cartesian to Polar Coordinates')
+        return False
+
+    Tool.Reset()
+
+    Tool.Set_Parameter('DX', u_sfc)
+    Tool.Set_Parameter('DY', v_sfc)
+    Tool.Set_Parameter('UNITS', 'radians')
+    Tool.Set_Parameter('SYSTEM', 'geographical')
+    Tool.Set_Parameter('SYSTEM_ZERO', 0.000000)
+    Tool.Set_Parameter('SYSTEM_ORIENT', 'clockwise')
+
+    if Tool.Execute() == False:
+        print('failed to execute tool: ' + Tool.Get_Name().c_str())
+        return False
+
+    #_____________________________________
+    # Save results to file:
+
+    dir = Tool.Get_Parameter('DIR').asDataObject()
+    len = Tool.Get_Parameter('LEN').asDataObject()
+
+    return dir, len
+

@@ -32,6 +32,8 @@ class Coarse_data:
         self.tasmin = None
         self.u = None
         self.v = None
+        self.uz = None
+        self.vz = None
         self.hurs = None
         self.pr_ = None
         self.ps = None
@@ -64,7 +66,7 @@ class Coarse_data:
             ds = import_ncdf(self.TEMP + var + '.nc').Get_Grid(0)
             setattr(self, var, ds)
 
-        if var == 'zg' or var == 'cc' or var == 'rh':
+        if var == 'zg' or var == 'cc' or var == 'rh' or var == 'uz' or var == 'vz':
             ds = import_ncdf(self.TEMP + var + '.nc')
             setattr(self, var, ds)
 
@@ -163,30 +165,6 @@ class Aux_data:
     def delete(self, var):
         saga_api.SG_Get_Data_Manager().Delete(getattr(self, var))
         setattr(self, var, None)
-
-
-
-
-
-class Srad_data:
-    """ cloud cover class """
-
-    def __init__(self, SRAD, dayofyear):
-        self.rsds_day = None  # import_gdal(SRAD + 'CHELSA_stot_pj_' + dayofyear + '_V.2.1.tif')
-        self.SRAD = SRAD
-        self.dayofyear = dayofyear
-
-    def set(self, var):
-        if getattr(self, var) == None:
-            return self._build_(var)
-
-    def delete(self, var):
-        saga_api.SG_Get_Data_Manager().Delete(getattr(self, var))
-        setattr(self, var, None)
-
-    def _build_(self, var):
-        ds = import_gdal(self.SRAD + 'CHELSA_stot_pj_' + self.dayofyear + '_V.2.1.tif')
-        setattr(self, var, ds)
 
 
 
