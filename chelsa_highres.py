@@ -2,12 +2,12 @@
 
 #This file is part of chelsa_highres.
 #
-#chelsa_highre is free software: you can redistribute it and/or modify
+#chelsa_isimip3b_ba_1km is free software: you can redistribute it and/or modify
 #it under the terms of the GNU General Public License as published by
 #the Free Software Foundation, either version 3 of the License, or
 #(at your option) any later version.
 
-#chelsa_isimip3b_ba_1km is distributed in the hope that it will be useful,
+#chelsa_highres is distributed in the hope that it will be useful,
 #but WITHOUT ANY WARRANTY; without even the implied warranty of
 #MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 #GNU General Public License for more details.
@@ -15,136 +15,175 @@
 #You should have received a copy of the GNU General Public License
 #along with chelsa_cmip6.  If not, see <https://www.gnu.org/licenses/>.
 
+from functions.ingester import *
 from functions.saga_functions import *
-from functions.get_era import *
+from functions.chelsa_functions import *
+from functions.chelsa_data_classes import *
 
-year = 1982
-month = 12
-day = 30
-hour = 11
-tmp = '/home/karger/scratch/'
+# *************************************************
+# global parameters
+# *************************************************
 
-era_data = get_era_via_api(year=year,
-                           month=month,
-                           day=day,
-                           hour=hour,
-                           tmp=tmp)
+TEMP='/home/karger/scratch/'
+INPUT='/storage/karger/chelsa_V2/INPUT_HIGHRES/'
+YEAR=2001
+MONTH=1
+DAY=1
+HOUR=12
 
-
-era_data.albedo()
-era_data.lst()
-era_data.tal1()
-era_data.tal2()
-
-if __name__ == '__main__':
-    saga_api.SG_Get_Data_Manager().Delete_All()  #
-
-    Load_Tool_Libraries(True)
+process = psutil.Process(os.getpid())
+saga_api.SG_Set_History_Depth(0)
 
 
-    ### calculate temprature lapserates *******************************************************
 
-    filename = TEMP + 't_levels_' + times[int(hour)] + '.nc'
-    tlevels  = import_ncdf(filename)
-    filename = TEMP + 'z_levels_' + times[int(hour)] + '.nc'
-    zlevels  = import_ncdf(filename)
-    zlevels.Get_Grid(0).Set_Scaling(zlevels.Get_Grid(0).Get_Scaling() * 0.10197162129)
-    zlevels.Get_Grid(1).Set_Scaling(zlevels.Get_Grid(1).Get_Scaling() * 0.10197162129)
-    tz  = tlapse(zlevels.Get_Grid(0), zlevels.Get_Grid(1), tlevels.Get_Grid(0), tlevels.Get_Grid(1), '(d-c)/(b-a)')
-    tz1 = change_latlong(tz)
-    tz1.Get_Projection().Create(saga_api.CSG_String('+proj=longlat +datum=WGS84 +no_defs'), saga_api.SG_PROJ_FMT_Proj4)
+# *************************************************
+# Get the command line arguments
+# *************************************************
+ap = argparse.ArgumentParser(
+    description='''# This python code is adapted for CHELSA_V2.1_HIGHRES
+the code is adapted to the ERA5 data. It runs the CHELSA algorithm for 
+air temperature (tas), total downwelling shortwave solar radiation (rsds), total downwelling longwave 
+solar radiation (rlsd), near-surface air pressure (ps), near-surface (10m) wind speed (sfcWind), near-surface
+relative humidity (hurs), near-surface air temperature lapse rates (tz), and total surface precipitation rate (pr). 
+The output directory needs the following 
+subfolders: /rsds, /rlds, /ps, /hurs/, /pr, /tas, /tz, /sfcWind.
+Dependencies for ubuntu_18.04:
+libwxgtk3.0-dev libtiff5-dev libgdal-dev libproj-dev 
+libexpat-dev wx-common libogdi3.2-dev unixodbc-dev
+g++ libpcre3 libpcre3-dev wget swig-4.0.1 python2.7-dev 
+software-properties-common gdal-bin python-gdal 
+python2.7-gdal libnetcdf-dev libgdal-dev
+python-pip cdsapi saga_gis-7.6.0
+All dependencies are resolved in the chelsa_V2.1.cont singularity container
+Tested with: singularity version 3.3.0-809.g78ec427cc
+''',
+    epilog='''author: Dirk N. Karger, dirk.karger@wsl.ch, Version 1.0'''
+)
 
-    # get mean temperature
-    tas = import_ncdf(TEMP + 'tmean.nc')
-    tas1 = change_latlong(tas.Get_Grid(0))
-    tas1.Get_Projection().Create(saga_api.CSG_String('+proj=longlat +datum=WGS84 +no_defs'), saga_api.SG_PROJ_FMT_Proj4)
+# collect the function arguments
+ap.add_argument('-y','--year', type=int, help="year, integer")
+ap.add_argument('-m','--month', type=int, help="month, integer")
+ap.add_argument('-d','--day', type=int,  help="day, integer")
+ap.add_argument('-h','--hour', type=int, help= 'hour, integer')
+ap.add_argument('-i','--input', type=str, help="input directory, string")
+ap.add_argument('-o','--output', type=str,  help="output directory, string")
+ap.add_argument('-t','--temp', type=str, help="root for temporary directory, string")
 
-    # reproject grids
-    dem = import_gdal(INPUT + 'ArcticDEM_Disko_tile_merge_cropped_S.tif')
-    dem_latlong = import_gdal(INPUT + 'ArcticDEM_Disko_tile_merge_cropped_S_latlong.tif')
+args = ap.parse_args()
+print(args)
 
-    tas_pj = clip_grid(tas1,dem_latlong,3)
-    tz_pj  = clip_grid(tz1,dem_latlong,3)
+# *************************************************
+# Get arguments
+# *************************************************
 
-    tz_shp = gridvalues_to_points(tz_pj)
-    tas_shp = gridvalues_to_points(tas_pj)
+year = args.year
+day = args.day
+month = args.month
+hour = args.hour
 
-    ## reproject
-    tz_shp = reproject_shape(tz_shp,dem)
-    tas_shp = reproject_shape(tas_shp,dem)
+# *************************************************
+# Set the directories from arguments
+# *************************************************
 
-    ## multilevel b spline
-    tz_ras = triangulation(tz_shp,dem)
-    tas_ras = triangulation(tas_shp,dem)
+INPUT = args.input
+OUTPUT = args.output
+TEMP = args.temp
+TEMP = str(TEMP + year + month + day + hour + '/')
 
-    rsds, ratio = srad(dem)
-
-    # load the orography
-    orog = load_sagadata(INPUT + 'orography.sgrd')
-    orog = change_latlong(orog)
-    orog.Get_Projection().Create(saga_api.CSG_String('+proj=longlat +datum=WGS84 +no_defs'), saga_api.SG_PROJ_FMT_Proj4)
-    orog_pj = clip_grid(orog,dem_latlong,3)
-    orog_shp = gridvalues_to_points(orog_pj)
-    orog_shp = reproject_shape(orog_shp,dem)
-    orog_ras = triangulation(orog_shp,dem)
-
-    # load the cloudcover
-    tcc = import_ncdf(TEMP + 'tcc.nc')
-    tcc = change_latlong(tcc.Get_Grid(0))
-    tcc.Get_Projection().Create(saga_api.CSG_String('+proj=longlat +datum=WGS84 +no_defs'), saga_api.SG_PROJ_FMT_Proj4)
-    tcc_pj = clip_grid(tcc,dem_latlong,3)
-    tcc_shp = gridvalues_to_points(tcc_pj)
-    tcc_shp = reproject_shape(tcc_shp,dem)
-
-    # downscale the temperatures
-    tas_high = lapse_rate_based_downscaling(dem,tz_ras,orog_ras,tas_ras)
-    tcc_ras = triangulation(tcc_shp,tas_high)
-    tas_srad = temp_srad_cc_correction(tas_high,ratio,tcc_ras,'tas')
-
-    # correct the solar radiation by cloud cover
-    rsds_cl = grid_calculator(rsds, tcc_ras, 'a*(1.0-0.75*b^(3.4))' )
-    # convert kWh/m**-2 to W/m**-2
-    rsds_cl = grid_calculator(rsds_cl,rsds_cl,'a*0.1142')
-    # read the albedo
-
-    albedo = import_ncdf(TEMP + 'albedo_' + times[int(hour)] + '.nc')
-
-    albedo = change_latlong(albedo.Get_Grid(0))
-
-    albedo.Get_Projection().Create(saga_api.CSG_String('+proj=longlat +datum=WGS84 +no_defs'), saga_api.SG_PROJ_FMT_Proj4)
-
-    albedo_pj = clip_grid(albedo, dem_latlong, 3)
-
-    albedo_shp = gridvalues_to_points(albedo_pj)
-
-    albedo_shp = reproject_shape(albedo_shp,
-                                 dem)
-
-    albedo_ras = multilevel_B_spline(albedo_shp,
-                                     dem)
-
-    tas_sky = grid_calculator(tas_high,
-                              tas_high,
-                              'a-20')
-
-    lst = calc_LST(rsds_cl,
-                   tas_high,
-                   tas_sky,
-                   albedo_ras)
-
-    # save the outputs
-    outfile2 = OUTPUT + 'tas/CHELSA_tas_' + times[int(hour)] + '_' + day + '_' + month + '_' + year + '.V.1.0.tif'
-    export_geotiff(tas_high,outfile2)
-    outfile2 = OUTPUT + 'lst/CHELSA_lst_' + times[int(hour)] + '_' + day + '_' + month + '_' + year + '.V.1.0.tif'
-    export_geotiff(lst,outfile2)
-    outfile2 = OUTPUT + 'tz/CHELSA_tz_' + times[int(hour)] + '_' + day + '_' + month + '_' + year + '.V.1.0.tif'
-    export_geotiff(tz1,outfile2)
-    outfile2 = OUTPUT + 'rsds/CHELSA_rsds_' + times[int(hour)] + '_' + day + '_' + month + '_' + year + '.V.1.0.tif'
-    export_geotiff(rsds_cl,outfile2)
-    outfile2 = OUTPUT + 'cssr/CHELSA_cssr_' + times[int(hour)] + '_' + day + '_' + month + '_' + year + '.V.1.0.tif'
-    export_geotiff(rsds,outfile2)
-
-    print(datetime.datetime.now())
-    # remove the temporary directory
+if os.path.exists(TEMP) and os.path.isdir(TEMP):
     shutil.rmtree(TEMP)
+
+os.mkdir(TEMP)
+
+# ************************************************
+# Script
+# ************************************************
+def main():
+    get_inputdata(year=YEAR,
+                  month=MONTH,
+                  day=DAY,
+                  TEMP=TEMP,
+                  hour=HOUR)
+
+    ### create the data classes
+    coarse_data = Coarse_data(TEMP=TEMP)
+    dem_data = Dem_data(INPUT=INPUT)
+    aux_data = Aux_data(INPUT=INPUT)
+    coarse_data.set('tlapse_mean')
+
+    ### downscale the variables
+
+    # 2m air temperature
+    tas = temperature(Coarse=coarse_data,
+                      Dem=dem_data,
+                      var='tas')
+
+    # near-surface air-pressure
+    ps = surface_pressure(Coarse=coarse_data,
+                          Dem=dem_data)
+
+    # windward-leeward index
+    windef = calculate_windeffect(Coarse=coarse_data,
+                                  Dem=dem_data)
+
+    wind_cor, wind_coarse = correct_windeffect(windef1=windef,
+                                               Coarse=coarse_data,
+                                               Aux=aux_data,
+                                               Dem=dem_data)
+    # total cloud cover
+    tcc = cloud_cover(Coarse=coarse_data,
+                      Dem=dem_data,
+                      windeffect=wind_cor)
+
+    # shortwave solar radiation downwards
+    rsds, csr = solar_radiation(tcc,
+                                Dem=dem_data,
+                                year=YEAR,
+                                month=MONTH,
+                                day=DAY,
+                                hour=HOUR)
+
+    # relative humidity
+    hurs = relative_humidity(Coarse=coarse_data,
+                             Dem=dem_data,
+                             windeffect=wind_cor)
+
+    # longwave radiation downwards
+    rlds = longwave_radiation_downwards(rsds=rsds,
+                                       csr=csr,
+                                       hurs=hurs,
+                                       tas=tas)
+
+    # precipitation rate
+    pr = precipitation(wind_cor=wind_cor,
+                       wind_coarse=wind_coarse,
+                       Coarse=coarse_data)
+
+    # wind speed
+    wind_dir, wind_speed = wind_speed_direction(Coarse=coarse_data,
+                                                Dem=dem_data)
+
+    ### scale and save the output variables
+    tas = grid_calculator_simple(tas, 'a*10') # K/10
+    tas.Save(TEMP + 'tas_high.sgrd')
+
+    coarse_data.tlapse_mean.Save(TEMP + 'tz.sgrd') # K/m
+
+    pr = grid_calculator_simple(tas, 'a*1000*1000') # mm/1000/1h
+    pr.Save(TEMP + 'pr_high.sgrd')
+
+    ps = grid_calculator_simple(ps, 'a*0.1') # hPa/10
+    ps.Save(TEMP + 'ps_high.sgrd')
+
+    tcc = grid_calculator_simple(tcc, 'a*1000') # %/10
+    tcc.Save(TEMP + 'tcc_high.sgrd')
+
+    hurs = grid_calculator_simple(hurs, 'a*1000') # %/10
+    hurs.Save(TEMP + 'hurs_high.sgrd')
+
+    rsds = grid_calculator_simple(rsds, 'a*10') # (kJ/10)/m2
+    rsds.Save(TEMP + 'rsds_high.sgrd')
+
+    rlds = grid_calculator_simple(rsds, 'a*0.01') # (kJ/10)/m2
+    rlds.Save(TEMP + 'rlds_high.sgrd')
 

@@ -106,12 +106,12 @@ hurs = relative_humidity(Coarse=coarse_data,
 
 hurs.Save(TEMP + 'hurs_high.sgrd')
 
-lwr = longwave_radiation_downwards(rsds=rsds,
+rlds = longwave_radiation_downwards(rsds=rsds,
                                    csr=csr,
                                    hurs=hurs,
                                    tas=tas)
 
-lwr.Save(TEMP + 'lwr_high.sgrd')
+rlds.Save(TEMP + 'rlds_high.sgrd')
 
 pr = precipitation(wind_cor=wind_cor,
                    wind_coarse=wind_coarse,

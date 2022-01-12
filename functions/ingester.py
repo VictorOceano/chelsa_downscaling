@@ -1,54 +1,23 @@
-import saga_api, sys, os, argparse, os.path, cdsapi, psutil, shutil, gdal, subprocess
+#!/usr/bin/env python
+
+#This file is part of chelsa_highres.
+#
+#chelsa_highre is free software: you can redistribute it and/or modify
+#it under the terms of the GNU General Public License as published by
+#the Free Software Foundation, either version 3 of the License, or
+#(at your option) any later version.
+
+#chelsa_isimip3b_ba_1km is distributed in the hope that it will be useful,
+#but WITHOUT ANY WARRANTY; without even the implied warranty of
+#MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#GNU General Public License for more details.
+
+#You should have received a copy of the GNU General Public License
+#along with chelsa_highres.  If not, see <https://www.gnu.org/licenses/>.
+
 import xarray as xr
 import datetime
-
-import cfgrib
-
-use_mistral = True
-
-def get_era5(parameter, type, year, month, outdir, path='/pool/data/ERA5', day=None, hour=None):
-    if (type == 'sf12_01'):
-        # select the correct file. Forecast steps are starting 6:00 UTC and 18 UTC:
-        if (day == '01' and hour < 6):
-            if (month == '01'):
-                month = '12'
-                year = str(int(year) - 1)
-            else:
-                month = str(int(month) - 1)
-
-    if day:
-        outfile = outdir + parameter + '_' + year + '-' + month + '-' + day + '.nc'
-        if (type == 'sf12_01'):
-            outfile = outdir + parameter + '_' + year + '-' + month + '.nc'
-    else:
-        outfile = outdir + parameter + '_' + year + '-' + month + '.nc'
-
-    if os.path.isfile(outfile):
-        print ('nothing to do. file already exists')
-    else:
-        if day:
-            filename = path + '/' + type + '/' + year + '/E5' + type + '_' + year + '-' + month + '-' + day + '_' + parameter
-        else:
-            filename = path + '/' + type + '/' + year + '/E5' + type + '_' + year + '-' + month + '_' + parameter
-        if (type == 'sf12_01'):
-            filename = path + '/' + type + '/' + year + '/E5' + type + '_' + year + '-' + month + '_' + parameter
-
-        os.system(
-            'sshpass -p 9331Joker1! scp -o StrictHostKeyChecking=no -r b381089@mistral.dkrz.de:/' + filename + ' ' + outdir + 'tmp_' + parameter + '.grib')
-        print ('file downloaded. Starting transformation ...')
-        os.system(
-            'cdo -R remapcon,r1440x720 -setgridtype,regular ' + outdir + 'tmp_' + parameter + '.grib ' + outdir + 'tmp_' + parameter + '.nc')
-        x1 = xr.open_dataset(outdir + 'tmp_' + parameter + '.nc', engine='cfgrib')
-
-        x1.to_netcdf(outfile)
-        os.remove(outdir + 'tmp_' + parameter + '.nc')
-        os.remove(outdir + 'tmp_' + parameter + '.grib')
-        print ('done')
-
-    return True
-
-
-#2m temperature: 167
+from helper.get_era5 import get_era5
 
 def get_inputdata(year, month, day, TEMP, hour=None):
     # get uwind
@@ -314,7 +283,8 @@ def get_inputdata(year, month, day, TEMP, hour=None):
     hours_ref_18 = [19,20, 21, 22, 23, 0, 1, 2, 3, 4, 5]
     hours_ref_06 = [7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17]
 
-    step=None
+    x2 = None
+    step = None
     if (hour in hours_ref_06):
         x1 = x1.sel(time=str(date_sel.year) + '-' + str("%02d" % date_sel.month) + '-' + str("%02d" % date_sel.day) + 'T06:00:00')
         step = hours_ref_06.index(hour) + 1
@@ -335,29 +305,6 @@ def get_inputdata(year, month, day, TEMP, hour=None):
 
     x2.to_netcdf(TEMP + 'pr_.nc')
 
-
-
-def get_pr_locally(PREC, TEMP, year, month, day, hour=None):
-    # get pr , this parameter is not on mistral, so it needs to be available locally
-    if day:
-        outfile = TEMP + '228_' + str(year) + '-' + str("%02d" % month) + '-' + str("%02d" % day) + '.nc'
-
-    os.system(
-        'cdo -R remapcon,r1440x720 -setgridtype,regular ' + PREC + 'pr_' + str(year) + '-' + str("%02d" % month) + '-'
-        + str("%02d" % day) + '.grib ' + TEMP + 'tmp_228.nc')
-    x1 = xr.open_dataset(TEMP + 'tmp_228.nc', engine='cfgrib')
-    x1.to_netcdf(outfile)
-
-    x1 = xr.open_dataset(TEMP + '228' + '_' + str(year) + '-' + str("%02d" % month) + '-' + str("%02d" % day) + '.nc')
-
-    if hour:
-        x2 = x1.sel(step=str("%02d" % hour) + str(':00:00'))
-    else:
-        x2 = x1.mean(dim='step')
-
-    x2.to_netcdf(TEMP + 'pr_.nc')
-
-    return True
 
 
 

@@ -311,18 +311,31 @@ def wind_speed_direction(Coarse, Dem):
 
 
 def longwave_radiation_downwards(rsds, csr, hurs, tas):
-    tas.Set_Scaling(0.1)
+    tas1 = grid_calculator_simple(tas, 'a/10')
     # e_sat = grid_calculator_simple(tas, equ='0.6112*exp((17.62*a)/(243.12+a))')
-    vp = grid_calculator(tas, hurs, equ='a*b')
+    vp = grid_calculator(tas1, hurs, equ='a*b')
     # sbc = Stefan Bolzman constant = 0.00000005670374
-    # e_clear = 59.38 + 113.7 * (tas / 273.16)^6 + 96.96 * sqrt((4.65 * vpd) / (25 * tas))/sbc*T^4
-    e_clear = grid_calculator(tas, vp, equ='59.38+113.7*(a/273.16)^6+96.96*sqrt((4.65*b)/(25*a))/(0.00000005670374*a^4)')
+    # e_clear = 59.38 + 113.7 * (tas / 273.16)^6 + 96.96 * sqrt((4.65 * vp) / (25 * tas))/sbc*T^4
+
+    e_clear_top1 = grid_calculator_simple(tas1, equ='((a/273.16)^6)*113.7')
+    e_sqrt1 = grid_calculator(tas1, vp, equ='(b*4.65)/(a*25)')
+    e_sqrt2 = grid_calculator_simple(e_sqrt1, equ='sqrt(a)')
+
+    e_clear_top2 = grid_calculator_simple(e_sqrt2, equ='a*96.96')
+
+    e_clear_top = grid_calculator(e_clear_top1, e_clear_top2, equ='59.38+a+b')
+    e_clear_bottom = grid_calculator_simple(tas1, equ='(a^4)*0.00000005670374')
+    e_clear = grid_calculator(e_clear_top, e_clear_bottom, equ='a/b')
+    #e_clear.Save(TEMP + 'e_clear.sgrd')
+
+    #e_clear = grid_calculator(vp, tas1, equ='1.24*(a/b)^(1/7)')
     t_atm = grid_calculator(rsds, csr, equ='a/b')
     # a =−0.84 and b = 0.84
     # e_eff = (1 + a * (1 - t_atm)) * e_clear + b * (1 - t_atm)
-    e_eff = grid_calculator(t_atm, e_clear, equ='(1+(-0.84)*(1-a))*b+0.84*(1-a)')
+    t_atm_1m = grid_calculator_simple(t_atm, equ='1-a')
+    e_eff = grid_calculator(t_atm_1m, e_clear, equ='(1+(a*(-0.84)))*b+a*0.84')
     # lw = e_eff*sbc*tas^4
-    lw = grid_calculator(e_eff, tas, equ='a*0.00000005670374*(b^4)')
+    lw = grid_calculator(e_eff, tas1, equ='a*0.00000005670374*(b^4)')
 
     return lw
 
