@@ -15,30 +15,39 @@
 #You should have received a copy of the GNU General Public License
 #along with chelsa_cmip6.  If not, see <https://www.gnu.org/licenses/>.
 
+# *************************************************
+# import functions and modules
+# *************************************************
+
+import os as os
 from functions.ingester import *
 from functions.saga_functions import *
 from functions.chelsa_functions import *
 from functions.chelsa_data_classes import *
+from functions.helper.set_ncdf_attributes import set_ncdf_attributes
 
 # *************************************************
 # global parameters
 # *************************************************
 
-TEMP='/home/karger/scratch/'
-INPUT='/storage/karger/chelsa_V2/INPUT_HIGHRES/'
-YEAR=2001
-MONTH=1
-DAY=1
-HOUR=12
+debugging = False
+
+if (debugging == True):
+    TEMP='/home/karger/scratch/'
+    INPUT='/storage/karger/chelsa_V2/INPUT_HIGHRES/'
+    OUTPUT='/storage/karger/chelsa_V2/OUTPUT_HIGHRES/'
+    YEAR=2001
+    MONTH=1
+    DAY=1
+    HOUR=12
 
 process = psutil.Process(os.getpid())
 saga_api.SG_Set_History_Depth(0)
 
-
-
 # *************************************************
 # Get the command line arguments
 # *************************************************
+
 ap = argparse.ArgumentParser(
     description='''# This python code is adapted for CHELSA_V2.1_HIGHRES
 the code is adapted to the ERA5 data. It runs the CHELSA algorithm for 
@@ -76,10 +85,10 @@ print(args)
 # Get arguments
 # *************************************************
 
-year = args.year
-day = args.day
-month = args.month
-hour = args.hour
+YEAR = args.year
+DAY = args.day
+MONTH = args.month
+HOUR = args.hour
 
 # *************************************************
 # Set the directories from arguments
@@ -98,6 +107,7 @@ os.mkdir(TEMP)
 # ************************************************
 # Script
 # ************************************************
+
 def main():
     get_inputdata(year=YEAR,
                   month=MONTH,
@@ -169,21 +179,128 @@ def main():
 
     coarse_data.tlapse_mean.Save(TEMP + 'tz.sgrd') # K/m
 
-    pr = grid_calculator_simple(tas, 'a*1000*1000') # mm/1000/1h
+    pr = grid_calculator_simple(pr, 'a*1000*1000') # mm/1000/1h
     pr.Save(TEMP + 'pr_high.sgrd')
 
-    ps = grid_calculator_simple(ps, 'a*0.1') # hPa/10
+    #ps = grid_calculator_simple(ps, 'a*0.1') # hPa/10  CHECK !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
     ps.Save(TEMP + 'ps_high.sgrd')
 
-    tcc = grid_calculator_simple(tcc, 'a*1000') # %/10
+    tcc = grid_calculator_simple(tcc, 'a*100') # fraction
     tcc.Save(TEMP + 'tcc_high.sgrd')
 
-    hurs = grid_calculator_simple(hurs, 'a*1000') # %/10
+    hurs = grid_calculator_simple(hurs, 'a*10000') # %/100
     hurs.Save(TEMP + 'hurs_high.sgrd')
 
-    rsds = grid_calculator_simple(rsds, 'a*10') # (kJ/10)/m2
+    #rsds = grid_calculator_simple(rsds, 'a*10') # kJ/s/m2
     rsds.Save(TEMP + 'rsds_high.sgrd')
 
-    rlds = grid_calculator_simple(rsds, 'a*0.01') # (kJ/10)/m2
+    rlds = grid_calculator_simple(rlds, 'a*0.1') # (W/10)/m2
     rlds.Save(TEMP + 'rlds_high.sgrd')
+
+    wind_speed = grid_calculator_simple(wind_speed, 'a*100') # (m/100)/s
+    wind_speed.Save(TEMP + 'sfcWind_high.sgrd')
+
+    ### convert files to ncdf
+    outfile = OUTPUT + 'tas/CHELSA_HR_tas_' + str(YEAR) + '-' + str("%02d" % MONTH) + '-' + str("%02d" % DAY) + '-' + str("%02d" % HOUR) + '_V.1.0.nc'
+    os.system('gdal_translate -ot Float32 -a_scale 0.1 -co "COMPRESS=DEFLATE" -co "ZLEVEL=9" ' + TEMP + 'tas_high.sdat ' + outfile)
+    set_ncdf_attributes(outfile=outfile,
+                        var='tas',
+                        scale='0.1',
+                        offset='0',
+                        standard_name='air_temperature',
+                        longname='Near-Surface Air Temperatures',
+                        unit='K')
+
+    outfile = OUTPUT + 'pr/CHELSA_HR_pr_' + str(YEAR) + '-' + str("%02d" % MONTH) + '-' + str("%02d" % DAY) + '-' + str("%02d" % HOUR) + '_V.1.0.nc'
+    os.system('gdal_translate -ot Float32 -co "COMPRESS=DEFLATE" -co "ZLEVEL=9" ' + TEMP + 'pr_high.sdat ' + outfile)
+    set_ncdf_attributes(outfile=outfile,
+                        var='pr',
+                        scale='0.001',
+                        offset='0',
+                        standard_name='precipitation_flux',
+                        longname='Precipitation',
+                        unit='kg m-2 h-1')
+
+    outfile = OUTPUT + 'ps/CHELSA_HR_ps_' + str(YEAR) + '-' + str("%02d" % MONTH) + '-' + str("%02d" % DAY) + '-' + str("%02d" % HOUR) + '_V.1.0.nc'
+    os.system('gdal_translate -ot Float32 -co "COMPRESS=DEFLATE" -co "ZLEVEL=9" ' + TEMP + 'ps_high.sdat ' + outfile)
+    set_ncdf_attributes(outfile=outfile,
+                        var='ps',
+                        scale='10',
+                        offset='0',
+                        standard_name='surface_air_pressure',
+                        longname='Surface Air Pressure',
+                        unit='Pascal')
+
+    outfile = OUTPUT + 'clt/CHELSA_HR_clt_' + str(YEAR) + '-' + str("%02d" % MONTH) + '-' + str("%02d" % DAY) + '-' + str("%02d" % HOUR) + '_V.1.0.nc'
+    os.system('gdal_translate -ot Float32 -co "COMPRESS=DEFLATE" -co "ZLEVEL=9" ' + TEMP + 'tcc_high.sdat ' + outfile)
+    set_ncdf_attributes(outfile=outfile,
+                        var='clt',
+                        scale='0.01',
+                        offset='0',
+                        standard_name='cloud_area_fraction',
+                        longname='Cloud Area Fraction',
+                        unit='Fraction')
+
+    outfile = OUTPUT + 'hurs/CHELSA_HR_hurs_' + str(YEAR) + '-' + str("%02d" % MONTH) + '-' + str("%02d" % DAY) + '-' + str("%02d" % HOUR) + '_V.1.0.nc'
+    os.system('gdal_translate -ot Float32 -co "COMPRESS=DEFLATE" -co "ZLEVEL=9" ' + TEMP + 'hurs_high.sdat ' + outfile)
+    set_ncdf_attributes(outfile=outfile,
+                        var='hurs',
+                        scale='0.01',
+                        offset='0',
+                        standard_name='relative_humidity',
+                        longname='Near-Surface Relative Humidity',
+                        unit='%')
+
+    outfile = OUTPUT + 'rsds/CHELSA_HR_rsds_' + str(YEAR) + '-' + str("%02d" % MONTH) + '-' + str("%02d" % DAY) + '-' + str("%02d" % HOUR) + '_V.1.0.nc'
+    os.system('gdal_translate -ot Float32 -co "COMPRESS=DEFLATE" -co "ZLEVEL=9" ' + TEMP + 'rsds_high.sdat ' + outfile)
+    set_ncdf_attributes(outfile=outfile,
+                        var='rsds',
+                        scale='1',
+                        offset='0',
+                        standard_name='surface_downwelling_shortwave_flux_in_air',
+                        longname='Surface Downwelling Shortwave Radiation',
+                        unit='kJ m-2')
+
+    outfile = OUTPUT + 'rlds/CHELSA_HR_rlds_' + str(YEAR) + '-' + str("%02d" % MONTH) + '-' + str("%02d" % DAY) + '-' + str("%02d" % HOUR) + '_V.1.0.nc'
+    os.system('gdal_translate -ot Float32 -co "COMPRESS=DEFLATE" -co "ZLEVEL=9" ' + TEMP + 'rlds_high.sdat ' + outfile)
+    set_ncdf_attributes(outfile=outfile,
+                        var='rlds',
+                        scale='1',
+                        offset='0',
+                        standard_name='surface_downwelling_longwave_flux_in_air',
+                        longname='Surface Downwelling Longwave Radiation',
+                        unit='W m-2')
+
+    outfile = OUTPUT + 'sfcWind/CHELSA_HR_sfcWind_' + str(YEAR) + '-' + str("%02d" % MONTH) + '-' + str("%02d" % DAY) + '-' + str("%02d" % HOUR) + '_V.1.0.nc'
+    os.system('gdal_translate -ot Float32 -co "COMPRESS=DEFLATE" -co "ZLEVEL=9" ' + TEMP + 'sfcWind_high.sdat ' + outfile)
+    set_ncdf_attributes(outfile=outfile,
+                        var='sfcWind',
+                        scale='0.01',
+                        offset='0',
+                        standard_name='wind_speed',
+                        longname='Near-Surface Wind Speed',
+                        unit='m s-1')
+
+    outfile = OUTPUT + 'tz/CHELSA_HR_tz_' + str(YEAR) + '-' + str("%02d" % MONTH) + '-' + str("%02d" % DAY) + '-' + str("%02d" % HOUR) + '_V.1.0.nc'
+    os.system('gdal_translate -ot Float32 -co "COMPRESS=DEFLATE" -co "ZLEVEL=9" ' + TEMP + 'tz.sdat ' + outfile)
+    set_ncdf_attributes(outfile=outfile,
+                        var='tz',
+                        scale='1',
+                        offset='0',
+                        standard_name='temperature_lapse_rate',
+                        longname='Near-Surface Temperature Lapse Rate in Air',
+                        unit='K m-1')
+
+
+if __name__ == '__main__':
+    main()
+
+
+
+
+
+
+
+
+
 

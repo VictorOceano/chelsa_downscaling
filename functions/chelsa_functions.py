@@ -18,6 +18,7 @@
 
 from functions.saga_functions import *
 from functions.chelsa_data_classes import *
+
 Load_Tool_Libraries(True)
 
 
@@ -235,6 +236,7 @@ def cloud_cover(Coarse, Dem, windeffect):
     cc_coarse = resample_up(cctotal, Coarse.tcc, 4)
     bias = grid_calculator(cc_coarse, Coarse.tcc, '(a+0.001)/(b+0.001)')
     cc_fin = grid_calculatorX(cctotal, bias, 'a/b')
+    cc_fin = grid_calculator_simple(cc_fin, 'ifelse(a>1,a-a+1,a*1)')
     Coarse.delete('tcc')
 
     return cc_fin
@@ -257,6 +259,8 @@ def solar_radiation(cc, Dem, year, month, day, hour):
     srad_sur = surface_radiation(csr_latlong,
                                  cc,
                                  'Surface Downwelling Shortwave Radiation')
+
+    srad_sur = grid_calculator_simple(srad_sur, equ='ifelse(a<0,a-a,a*1)')
 
     return srad_sur, csr_latlong
 
