@@ -44,17 +44,23 @@ from functions.chelsa_data_classes import *
 # *************************************************
 
 TEMP='/home/karger/scratch/'
+ERA5store='/storage/karger/ERA5/store/'
 INPUT='/storage/karger/chelsa_V2/INPUT_HIGHRES/'
 YEAR=2001
 MONTH=1
-DAY=1
-HOUR=12
+DAY=3
+HOUR=13
 
 process = psutil.Process(os.getpid())
 saga_api.SG_Set_History_Depth(0)
 
 
-get_inputdata(year=YEAR, month=MONTH, day=DAY, TEMP=TEMP, hour=HOUR)
+get_inputdata(year=YEAR,
+              month=MONTH,
+              day=DAY,
+              TEMP=TEMP,
+              ERA5store=ERA5store,
+              hour=HOUR)
 
 
 ### create the data classes

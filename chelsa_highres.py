@@ -36,9 +36,9 @@ if (debugging == True):
     TEMP='/home/karger/scratch/'
     INPUT='/storage/karger/chelsa_V2/INPUT_HIGHRES/'
     OUTPUT='/storage/karger/chelsa_V2/OUTPUT_HIGHRES/'
-    YEAR=2001
-    MONTH=1
-    DAY=1
+    YEAR=2012
+    MONTH=2
+    DAY=2
     HOUR=12
 
 process = psutil.Process(os.getpid())
@@ -62,8 +62,8 @@ libexpat-dev wx-common libogdi3.2-dev unixodbc-dev
 g++ libpcre3 libpcre3-dev wget swig-4.0.1 python2.7-dev 
 software-properties-common gdal-bin python-gdal 
 python2.7-gdal libnetcdf-dev libgdal-dev
-python-pip cdsapi saga_gis-7.6.0
-All dependencies are resolved in the chelsa_V2.1.cont singularity container
+python-pip cdsapi saga_gis-8.2.0 cdo nco 
+All dependencies are resolved in the chelsa_highres_V.1.0.sif singularity container
 Tested with: singularity version 3.3.0-809.g78ec427cc
 ''',
     epilog='''author: Dirk N. Karger, dirk.karger@wsl.ch, Version 1.0'''
@@ -73,10 +73,11 @@ Tested with: singularity version 3.3.0-809.g78ec427cc
 ap.add_argument('-y','--year', type=int, help="year, integer")
 ap.add_argument('-m','--month', type=int, help="month, integer")
 ap.add_argument('-d','--day', type=int,  help="day, integer")
-ap.add_argument('-h','--hour', type=int, help= 'hour, integer')
+ap.add_argument('-hr','--hour', type=int, help='hour, integer')
 ap.add_argument('-i','--input', type=str, help="input directory, string")
 ap.add_argument('-o','--output', type=str,  help="output directory, string")
 ap.add_argument('-t','--temp', type=str, help="root for temporary directory, string")
+ap.add_argument('-er','--era5', type=str, help="directory for storing era5 input files, string")
 
 args = ap.parse_args()
 print(args)
@@ -97,7 +98,8 @@ HOUR = args.hour
 INPUT = args.input
 OUTPUT = args.output
 TEMP = args.temp
-TEMP = str(TEMP + year + month + day + hour + '/')
+ERA5store = args.era5
+TEMP = str(TEMP + str(YEAR) + str(MONTH) + str(DAY) + str(HOUR) + '/')
 
 if os.path.exists(TEMP) and os.path.isdir(TEMP):
     shutil.rmtree(TEMP)
@@ -113,6 +115,7 @@ def main():
                   month=MONTH,
                   day=DAY,
                   TEMP=TEMP,
+                  ERA5store=ERA5store,
                   hour=HOUR)
 
     ### create the data classes
@@ -140,6 +143,7 @@ def main():
                                                Coarse=coarse_data,
                                                Aux=aux_data,
                                                Dem=dem_data)
+
     # total cloud cover
     tcc = cloud_cover(Coarse=coarse_data,
                       Dem=dem_data,
@@ -202,7 +206,7 @@ def main():
 
     ### convert files to ncdf
     outfile = OUTPUT + 'tas/CHELSA_HR_tas_' + str(YEAR) + '-' + str("%02d" % MONTH) + '-' + str("%02d" % DAY) + '-' + str("%02d" % HOUR) + '_V.1.0.nc'
-    os.system('gdal_translate -ot Float32 -a_scale 0.1 -co "COMPRESS=DEFLATE" -co "ZLEVEL=9" ' + TEMP + 'tas_high.sdat ' + outfile)
+    os.system('gdal_translate -ot Float32 -co "COMPRESS=DEFLATE" -co "ZLEVEL=9" ' + TEMP + 'tas_high.sdat ' + outfile)
     set_ncdf_attributes(outfile=outfile,
                         var='tas',
                         scale='0.1',
