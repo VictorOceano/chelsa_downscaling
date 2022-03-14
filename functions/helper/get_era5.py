@@ -31,24 +31,6 @@ def wait_until(somepredicate, timeout, period=0.25, *args, **kwargs):
     return False
 
 
-def md5Checksum(filePath,url):
-    if url==None:
-        with open(filePath, 'rb') as fh:
-            m = hashlib.md5()
-            while True:
-                data = fh.read(8192)
-                if not data:
-                    break
-                m.update(data)
-            return m.hexdigest()
-    else:
-        r = requests.get(url, stream=True)
-        m = hashlib.md5()
-        for line in r.iter_lines():
-            m.update(line)
-        return m.hexdigest()
-
-
 def get_era5(parameter, type, year, month, outdir, storedir, path='/pool/data/ERA5', day=None, hour=None):
     if (type == 'sf12_01'):
         # select the correct file. Forecast steps are starting 6:00 UTC and 18 UTC:
