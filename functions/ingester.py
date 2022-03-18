@@ -19,7 +19,7 @@ import xarray as xr
 import datetime
 from helper.get_era5 import get_era5
 
-def get_inputdata(year, month, day, TEMP, ERA5store, hour=None):
+def get_inputdata(year, month, day, TEMP, ERA5store, hour=None, username=None, password=None):
     # get uwind
     get_era5(parameter='165',
              type='sf00_1H',
@@ -27,7 +27,9 @@ def get_inputdata(year, month, day, TEMP, ERA5store, hour=None):
              month=str("%02d" % month),
              outdir=TEMP,
              storedir=ERA5store,
-             path='/pool/data/ERA5')
+             path='/pool/data/ERA5',
+             username=username,
+             password=password)
 
     x1 = xr.open_dataset(ERA5store + '165' + '_' + str(year) + '-' + str("%02d" % month) + '.nc')
     if hour:
@@ -45,7 +47,9 @@ def get_inputdata(year, month, day, TEMP, ERA5store, hour=None):
              month=str("%02d" % month),
              outdir=TEMP,
              storedir=ERA5store,
-             path='/pool/data/ERA5')
+             path='/pool/data/ERA5',
+             username=username,
+             password=password)
 
     x1 = xr.open_dataset(ERA5store + '165' + '_' + str(year) + '-' + str("%02d" % month) + '.nc')
     if hour:
@@ -65,7 +69,10 @@ def get_inputdata(year, month, day, TEMP, ERA5store, hour=None):
              outdir=TEMP,
              storedir=ERA5store,
              path='/pool/data/ERA5',
-             day=str("%02d" % day))
+             day=str("%02d" % day),
+             username=username,
+             password=password)
+
     x1 = xr.open_dataset(ERA5store + '130' + '_' + str(year) + '-' + str("%02d" % month) + '-' + str("%02d" % day) + '.nc')
     x1 = x1.loc[dict(isobaricInhPa=slice('950', '850'))]
     x1 = x1.drop(925, dim='isobaricInhPa')
@@ -86,7 +93,10 @@ def get_inputdata(year, month, day, TEMP, ERA5store, hour=None):
              day=str("%02d" % day),
              outdir=TEMP,
              storedir=ERA5store,
-             path='/pool/data/ERA5')
+             path='/pool/data/ERA5',
+             username=username,
+             password=password)
+
     x1 = xr.open_dataset(ERA5store + '129' + '_' + str(year) + '-' + str("%02d" % month) + '-' + str("%02d" % day) + '.nc')
     x1 = x1.loc[dict(isobaricInhPa=slice('950', '850'))]
     x1 = x1.drop(925, dim='isobaricInhPa')
@@ -114,7 +124,9 @@ def get_inputdata(year, month, day, TEMP, ERA5store, hour=None):
              month=str("%02d" % month),
              outdir=TEMP,
              storedir=ERA5store,
-             path='/pool/data/ERA5')
+             path='/pool/data/ERA5',
+             username=username,
+             password=password)
 
     x1 = xr.open_dataset(ERA5store + '167' + '_' + str(year) + '-' + str("%02d" % month) + '.nc')
     if hour:
@@ -135,7 +147,9 @@ def get_inputdata(year, month, day, TEMP, ERA5store, hour=None):
              month=str("%02d" % month),
              outdir=TEMP,
              storedir=ERA5store,
-             path='/pool/data/ERA5')
+             path='/pool/data/ERA5',
+             username=username,
+             password=password)
 
     x1 = xr.open_dataset(ERA5store + '134' + '_' + str(year) + '-' + str("%02d" % month) + '.nc')
     if hour:
@@ -156,7 +170,9 @@ def get_inputdata(year, month, day, TEMP, ERA5store, hour=None):
              month=str("%02d" % month),
              outdir=TEMP,
              storedir=ERA5store,
-             path='/pool/data/ERA5')
+             path='/pool/data/ERA5',
+             username=username,
+             password=password)
 
     x1 = xr.open_dataset(ERA5store + '164' + '_' + str(year) + '-' + str("%02d" % month) + '.nc')
     if hour:
@@ -178,7 +194,10 @@ def get_inputdata(year, month, day, TEMP, ERA5store, hour=None):
              day=str("%02d" % day),
              outdir=TEMP,
              storedir=ERA5store,
-             path='/pool/data/ERA5')
+             path='/pool/data/ERA5',
+             username=username,
+             password=password)
+
     x1 = xr.open_dataset(ERA5store + '157' + '_' + str(year) + '-' + str("%02d" % month) + '-' + str("%02d" % day) + '.nc')
     x1 = x1.sel(isobaricInhPa=1000)
     if hour:
@@ -208,7 +227,9 @@ def get_inputdata(year, month, day, TEMP, ERA5store, hour=None):
              day=str("%02d" % day),
              outdir=TEMP,
              storedir=ERA5store,
-             path='/pool/data/ERA5')
+             path='/pool/data/ERA5',
+             username=username,
+             password=password)
 
     x1 = xr.open_dataset(ERA5store + '248' + '_' + str(year) + '-' + str("%02d" % month) + '-' + str("%02d" % day) + '.nc')
     if hour:
@@ -229,7 +250,9 @@ def get_inputdata(year, month, day, TEMP, ERA5store, hour=None):
              day=str("%02d" % day),
              outdir=TEMP,
              storedir=ERA5store,
-             path='/pool/data/ERA5')
+             path='/pool/data/ERA5',
+             username=username,
+             password=password)
 
     x1 = xr.open_dataset(ERA5store + '131' + '_' + str(year) + '-' + str("%02d" % month) + '-' + str("%02d" % day) + '.nc')
     if hour:
@@ -250,7 +273,9 @@ def get_inputdata(year, month, day, TEMP, ERA5store, hour=None):
              day=str("%02d" % day),
              outdir=TEMP,
              storedir=ERA5store,
-             path='/pool/data/ERA5')
+             path='/pool/data/ERA5',
+             username=username,
+             password=password)
 
     x1 = xr.open_dataset(ERA5store + '132' + '_' + str(year) + '-' + str("%02d" % month) + '-' + str("%02d" % day) + '.nc')
     if hour:
@@ -271,7 +296,9 @@ def get_inputdata(year, month, day, TEMP, ERA5store, hour=None):
              outdir=TEMP,
              storedir=ERA5store,
              path='/pool/data/ERA5',
-             hour=hour)
+             hour=hour,
+             username=username,
+             password=password)
 
     year1 = year
     month1 = month

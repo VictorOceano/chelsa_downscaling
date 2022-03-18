@@ -78,6 +78,8 @@ ap.add_argument('-i','--input', type=str, help="input directory, string")
 ap.add_argument('-o','--output', type=str,  help="output directory, string")
 ap.add_argument('-t','--temp', type=str, help="root for temporary directory, string")
 ap.add_argument('-er','--era5', type=str, help="directory for storing era5 input files, string")
+ap.add_argument('-u','--username', type=str, help="username for mistral@dkrz.de, string")
+ap.add_argument('-p','--password', type=str, help="password for mistral@dkrz.de, string")
 
 args = ap.parse_args()
 print(args)
@@ -99,6 +101,9 @@ INPUT = args.input
 OUTPUT = args.output
 TEMP = args.temp
 ERA5store = args.era5
+username = args.username
+password = args.password
+
 TEMP = str(TEMP + str(YEAR) + str(MONTH) + str(DAY) + str(HOUR) + '/')
 
 if os.path.exists(TEMP) and os.path.isdir(TEMP):
@@ -116,7 +121,9 @@ def main():
                   day=DAY,
                   TEMP=TEMP,
                   ERA5store=ERA5store,
-                  hour=HOUR)
+                  hour=HOUR,
+                  username=username,
+                  password=password)
 
     ### create the data classes
     coarse_data = Coarse_data(TEMP=TEMP)
@@ -125,7 +132,6 @@ def main():
     coarse_data.set('tlapse_mean')
 
     ### downscale the variables
-
     # 2m air temperature
     tas = temperature(Coarse=coarse_data,
                       Dem=dem_data,

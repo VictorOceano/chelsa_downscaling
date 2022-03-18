@@ -33,7 +33,12 @@ def wait_until(outfile, timeout, period=1.0):
     return 'timeout: No file access.'
 
 
-def get_era5(parameter, type, year, month, outdir, storedir, path='/pool/data/ERA5', day=None, hour=None):
+def get_era5(parameter, type, year, month, outdir, storedir, username=None, password=None, path='/pool/data/ERA5', day=None, hour=None):
+    if (username == None):
+        print('ERROR: No username for Mistral provided. Data store cannot be accessed')
+    if (password == None):
+        print('ERROR: No password for Mistral provided. Data store cannot be accessed')
+
     if (type == 'sf12_01'):
         # select the correct file. Forecast steps are starting 6:00 UTC and 18 UTC:
         if (day == '01' and hour < 6):
@@ -64,7 +69,7 @@ def get_era5(parameter, type, year, month, outdir, storedir, path='/pool/data/ER
             filename = path + '/' + type + '/' + year + '/E5' + type + '_' + year + '-' + month + '_' + parameter
 
         os.system(
-            'sshpass -p 9331Joker1! scp -o StrictHostKeyChecking=no -r b381089@mistral.dkrz.de:/' + filename + ' ' + outdir + 'tmp_' + parameter + '.grib')
+            'sshpass -p ' + password + ' scp -o StrictHostKeyChecking=no -r ' + username + '@mistral.dkrz.de:/' + filename + ' ' + outdir + 'tmp_' + parameter + '.grib')
         print ('file downloaded. Starting transformation ...')
         os.system(
             'cdo -R remapcon,r1440x720 -setgridtype,regular ' + outdir + 'tmp_' + parameter + '.grib ' + outdir + 'tmp_' + parameter + '.nc')
@@ -76,3 +81,5 @@ def get_era5(parameter, type, year, month, outdir, storedir, path='/pool/data/ER
         print ('done')
 
     return True
+
+
