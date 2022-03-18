@@ -46,10 +46,14 @@ from functions.chelsa_data_classes import *
 TEMP='/home/karger/scratch/'
 ERA5store='/storage/karger/ERA5/store/'
 INPUT='/storage/karger/chelsa_V2/INPUT_HIGHRES/'
-YEAR=2001
+YEAR=2002
 MONTH=1
 DAY=3
 HOUR=13
+year=2002
+month=1
+day=3
+hour=13
 
 process = psutil.Process(os.getpid())
 saga_api.SG_Set_History_Depth(0)

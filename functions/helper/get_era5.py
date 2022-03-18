@@ -18,17 +18,19 @@
 import os as os
 import xarray as xr
 import time
-import hashlib
-import requests
 
 
-def wait_until(somepredicate, timeout, period=0.25, *args, **kwargs):
+def wait_until(outfile, timeout, period=1.0):
     mustend = time.time() + timeout
     while time.time() < mustend:
-        if somepredicate(*args, **kwargs):
+        accessright = os.access(outfile, os.R_OK)
+        print('outfile: ' + outfile)
+        print('accessright: ' + str(accessright))
+        if accessright == True:
+            print('access ok')
             return True
         time.sleep(period)
-    return False
+    return 'timeout: No file access.'
 
 
 def get_era5(parameter, type, year, month, outdir, storedir, path='/pool/data/ERA5', day=None, hour=None):
@@ -49,11 +51,9 @@ def get_era5(parameter, type, year, month, outdir, storedir, path='/pool/data/ER
         outfile = storedir + parameter + '_' + year + '-' + month + '.nc'
 
     if os.path.isfile(outfile):
-        print ('no download needed. file already exists in filesystem. Checking md5 checksum...')
-        md5_remote = os.popen('sshpass -p 9331Joker1! ssh -o StrictHostKeyChecking=no b381089@mistral.dkrz.de md5sum /home/b/b381089/test.test').read()
-        md5_remote = md5_remote.split(" ", 1)[0]
-        md5_locale = hashlib.md5(open(outfile, 'rb').read()).hexdigest()
-        wait_until(md5_locale == md5_remote)
+        print ('no download needed. file already exists in filesystem. Checking file access ...')
+        # check the file access
+        wait_until(outfile, 300, 0.25)
 
     else:
         if day:
