@@ -104,7 +104,7 @@ ERA5store = args.era5
 username = args.username
 password = args.password
 
-TEMP = str(TEMP + str(YEAR) + str(MONTH) + str(DAY) + str(HOUR) + '/')
+TEMP = str(TEMP + str(YEAR) + str("%02d" % MONTH) + str("%02d" % DAY) + str("%02d" % HOUR) + '/')
 
 if os.path.exists(TEMP) and os.path.isdir(TEMP):
     shutil.rmtree(TEMP)

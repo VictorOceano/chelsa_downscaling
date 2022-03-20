@@ -49,28 +49,57 @@ INPUT='/storage/karger/chelsa_V2/INPUT_HIGHRES/'
 YEAR=2002
 MONTH=1
 DAY=3
-HOUR=13
+HOUR=0
 year=2002
 month=1
 day=3
-hour=13
+hour=0
+username=''
+password=''
 
 process = psutil.Process(os.getpid())
 saga_api.SG_Set_History_Depth(0)
 
 
-get_inputdata(year=YEAR,
-              month=MONTH,
-              day=DAY,
-              TEMP=TEMP,
-              ERA5store=ERA5store,
-              hour=HOUR)
+#get_inputdata(year=YEAR,
+#              month=MONTH,
+#              day=DAY,
+#              TEMP=TEMP,
+#              ERA5store=ERA5store,
+#              hour=HOUR)
 
 
 ### create the data classes
 coarse_data = Coarse_data(TEMP=TEMP)
 dem_data = Dem_data(INPUT=INPUT)
 aux_data = Aux_data(INPUT=INPUT)
+
+tcc = load_sagadata('/home/karger/scratch/tcc_high.sgrd')
+# shortwave solar radiation downwards
+
+Dem = dem_data
+
+
+
+csr = solar_radiation(cc=tcc,
+                            Dem=dem_data,
+                            year=YEAR,
+                            month=MONTH,
+                            day=DAY,
+                            hour=HOUR)
+
+
+
+
+
+
+
+
+
+
+
+
+
 coarse_data.set('tlapse_mean')
 
 coarse_data.tlapse_mean.Save(TEMP + 'tlapse.sgrd')

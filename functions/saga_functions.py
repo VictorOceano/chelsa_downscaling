@@ -2445,7 +2445,7 @@ def clear_sky_solar_radiation(dem_merc, year, month, day, hour):
     Tool.Set_Parameter('DAY', str(year) + '-' + str("%02d" % month) + '-' + str("%02d" % day))
     Tool.Set_Parameter('MOMENT', hour)
     Tool.Set_Parameter('HOUR_RANGE.MIN', 0.000000)
-    Tool.Set_Parameter('METHOD', 'Lumped Atmospheric Transmittance')
+    Tool.Set_Parameter('METHOD', 2)
     Tool.Set_Parameter('ATMOSPHERE', 12000.000000)
     Tool.Set_Parameter('PRESSURE', 1013.000000)
     Tool.Set_Parameter('WATER', 1.680000)
@@ -2456,7 +2456,7 @@ def clear_sky_solar_radiation(dem_merc, year, month, day, hour):
         print('failed to execute tool: ' + Tool.Get_Name().c_str())
         return False
 
-    Data = Tool.Get_Parameter('GRD_TOTAL').asDataObject()
+    Data = Tool.Get_Parameter('GRD_TOTAL').asGrid()
 
     return Data
 

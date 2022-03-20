@@ -247,11 +247,19 @@ def solar_radiation(cc, Dem, year, month, day, hour):
     Dem.set('demproj')
     Dem.set('dem_high')
 
+    if (hour == 0):
+        hour = 24
+
+    csr = False
     csr = clear_sky_solar_radiation(dem_merc=Dem.demproj,
                                     year=year,
                                     month=month,
                                     day=day,
-                                    hour=hour)
+                                    hour=str("%02d" % hour))
+
+    if (csr == False):
+        print('its dark, no sunshine yet, producing a grid that is all 0.000001.')
+        csr = grid_calculator_simple(Dem.demproj, 'a-a+0.000001')
 
     csr_latlong = proj_2_latlong(csr, Dem.dem_high)
 
