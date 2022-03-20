@@ -18,7 +18,6 @@ ERA5='/storage/karger/ERA5/store/'
 USERNAME='b381089'
 PASSWORD='9331Joker1!'
 
-for HOUR in {0..24}
-do
+HOUR=2
 singularity exec -B /storage /home/karger/singularity/chelsa_highres_V.1.0.sif python /home/karger/scripts/chelsa_highres/chelsa_highres.py --year $YEAR --month $MONTH --day $DAY --hour $HOUR --temp $TEMP --era5 $ERA5 --input $INPUT --output $OUTPUT --password $PASSWORD --username $USERNAME
-done
+
