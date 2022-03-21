@@ -78,5 +78,21 @@ The saga_functions.py provides the api access functions to the saga_cmd function
 The ingester function loads the input data and does the neccessary transformations. If you adapt the code to new input data this is where you want to start.
 The helper directory contains functions to download input data and to transform the output files. 
 
+The main function chelsa_highres.py can be called from the command line using:
+
+singularity exec chelsa_highres_V.1.0.sif python ./chelsa_highres/chelsa_highres.py --year $YEAR --month $MONTH --day $DAY --hour $HOUR --temp $TEMP --era5 $ERA5 --input $INPUT --output $OUTPUT --password $PASSWORD --username $USERNAME
+
+The following parameters are needed:
+$YEAR = year for which the calculation is done
+$MONTH = month for which the calculation is done
+$DAY = day for which the calculation is done
+$HOUR = hour for which the calculation is done
+$TEMP = root directory for the temporary directory to be created
+$ERA5 = data store for the downloaded ERA5 files
+$INPUT = directory with the orography input grids
+$OUTPUT = root of the output directory, seperate directories for all parameters named by their name (e.g.: /tas) should be present
+$PASSWORD = your password for Mistral
+$USERNAME = your username for Mistral
+
 
 
