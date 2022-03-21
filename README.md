@@ -96,3 +96,30 @@ $USERNAME = your username for Mistral
 
 
 
+CITATION:
+------------
+If you need a citation for the output, please refer to the article describing the high
+resolution climatologies:
+
+Karger, D.N., Conrad, O., Böhner, J., Kawohl, T., Kreft, H., Soria-Auza, R.W., Zimmermann, N.E., Linder, P., Kessler, M. (2017). Climatologies at high resolution for the Earth land surface areas. Scientific Data. 4 170122. https://doi.org/10.1038/sdata.2017.122
+
+
+
+OUTPUT
+------------
+The output consist of netCDF4 files. There will be different files for each variable and timestep. 
+
+
+CONTACT
+-------
+<dirk.karger@wsl.ch>
+
+
+
+AUTHOR
+------
+Dirk Nikolaus Karger
+Swiss Federal Research Institute WSL
+Zürcherstrasse 111
+8903 Birmensdorf 
+Switzerland
