@@ -301,6 +301,8 @@ def main():
                         longname='Near-Surface Temperature Lapse Rate in Air',
                         unit='K m-1')
 
+    
+    shutil.rmtree(TEMP)
 
 if __name__ == '__main__':
     main()
