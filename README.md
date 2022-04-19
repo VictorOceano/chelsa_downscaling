@@ -139,6 +139,8 @@ OUTPUT
 ------------
 The output consist of netCDF4 files. There will be different files for each variable and timestep. 
 
+The output directory needs the following 
+subfolders: /rsds, /rlds, /ps, /hurs/, /pr, /tas, /clt, /tz, /sfcWind.
 
 CONTACT
 -------
