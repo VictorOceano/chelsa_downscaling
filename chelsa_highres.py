@@ -49,8 +49,8 @@ saga_api.SG_Set_History_Depth(0)
 # *************************************************
 
 ap = argparse.ArgumentParser(
-    description='''# This python code is adapted for CHELSA_V2.1_HIGHRES
-the code is adapted to the ERA5 data. It runs the CHELSA algorithm for 
+    description='''# This python code for CHELSA_V2.1_HIGHRES
+is adapted to the ERA5 data. It runs the CHELSA algorithm for 
 air temperature (tas), total downwelling shortwave solar radiation (rsds), total downwelling longwave 
 solar radiation (rlsd), near-surface air pressure (ps), near-surface (10m) wind speed (sfcWind), near-surface
 relative humidity (hurs), surface cloud area fraction (clt), near-surface air temperature lapse rates (tz), and total surface precipitation rate (pr). 
