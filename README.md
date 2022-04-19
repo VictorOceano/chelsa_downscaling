@@ -1,10 +1,9 @@
 chelsa_highres
 -----------
 This package contains functions to creates hourly, or daily high-resolution 
-climatologies for near-surface (2m) air temperature (tas), precipitation rate,
-surface pressure (ps), surface relative humidity (hurs), 10m wind speed (sfcWind),
-downwelling longwave solar radiation (rsds), downwelling longwave solar radiation (rlds),
-atmospheric temperature lapse rates (tz), and total cloud cover fraction (clt). 
+climatologies for near-surface (2m) air temperature (tas), total downwelling shortwave solar radiation (rsds), total downwelling longwave 
+solar radiation (rlsd), near-surface air pressure (ps), near-surface (10m) wind speed (sfcWind), near-surface
+relative humidity (hurs), surface cloud area fraction (clt), near-surface air temperature lapse rates (tz), and total surface precipitation rate (pr).
 The code requires input from ERA5. Currently, it downloads the input data from the Mistral
 cluster at DKRZ. To access the input data a username and password for Mistral is needed.
 The code is part of the CHELSA Project: (CHELSA, <https://www.chelsa-climate.org/>).
