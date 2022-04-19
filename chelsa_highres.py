@@ -53,9 +53,9 @@ ap = argparse.ArgumentParser(
 the code is adapted to the ERA5 data. It runs the CHELSA algorithm for 
 air temperature (tas), total downwelling shortwave solar radiation (rsds), total downwelling longwave 
 solar radiation (rlsd), near-surface air pressure (ps), near-surface (10m) wind speed (sfcWind), near-surface
-relative humidity (hurs), near-surface air temperature lapse rates (tz), and total surface precipitation rate (pr). 
+relative humidity (hurs), surface cloud area fraction (clt), near-surface air temperature lapse rates (tz), and total surface precipitation rate (pr). 
 The output directory needs the following 
-subfolders: /rsds, /rlds, /ps, /hurs/, /pr, /tas, /tz, /sfcWind.
+subfolders: /rsds, /rlds, /ps, /hurs/, /pr, /tas, /clt, /tz, /sfcWind.
 Dependencies for ubuntu_18.04:
 libwxgtk3.0-dev libtiff5-dev libgdal-dev libproj-dev 
 libexpat-dev wx-common libogdi3.2-dev unixodbc-dev
